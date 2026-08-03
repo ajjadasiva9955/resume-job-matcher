@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RJM-Agent System Architecture Diagrams</title>
+    <!-- Import Mermaid.js for rendering diagrams -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background-color: #f4f4f4; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 8px; }
+        h1 { text-align: center; color: #2c3e50; }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 10px; color: #2c3e50; margin-top: 40px; }
+        .diagram-box { border: 1px solid #ddd; padding: 20px; border-radius: 4px; margin-top: 20px; overflow: auto; background: #fff; }
+        .caption { text-align: center; font-style: italic; color: #666; margin-top: 10px; font-size: 0.9em; }
+        .download-hint { background: #e8f4fd; border-left: 4px solid #3498db; padding: 15px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Conference Paper Figures</h1>
+    <div class="download-hint">
+        <strong>Tip for Authors:</strong> Use a screen capture tool (like Snipping Tool) to save these diagrams. 
+        Since they are rendered via code, they are 100% unique to your paper and will pass plagiarism checks.
+    </div>
+
+    <!-- FIGURE 1: HIGH LEVEL ARCHITECTURE -->
+    <h2>Figure 1: RJM-Agent System Architecture</h2>
+    <div class="diagram-box">
+        <pre class="mermaid">
+        graph TD
+            %% Nodes Configuration
+            classDef client fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+            classDef flask fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+            classDef logic fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px;
+            classDef external fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
+
+            User((User/Candidate)):::client
+            
+            subgraph "Application Server (Flask)"
+                Router[API Gateway / Routes]:::flask
+                
+                subgraph "Ingestion Layer"
+                    Parser[PyPDF2 Parser]:::logic
+                end
+                
+                subgraph "Logic Layer"
+                    Regex[Regex Skill Extractor]:::logic
+                    Mapper[Role Mapping Engine]:::logic
+                    GapAlgo[Gap Analysis Algorithm]:::logic
+                end
+                
+                subgraph "Concurrency Layer"
+                    Threads[ThreadPoolExecutor]:::flask
+                end
+            end
+            
+            subgraph "External Services Layer"
+                SerpApi[SerpApi Engine]:::external
+                Gemini[Google Gemini 2.5 API]:::external
+            end
+
+            %% Connections
+            User -->|Uploads PDF| Router
+            Router --> Parser
+            Parser -->|Raw Text| Regex
+            Regex -->|Skill Vector| Mapper
+            Mapper -->|Matched Roles| GapAlgo
+            
+            GapAlgo -->|Missing Skills| Threads
+            GapAlgo -->|Context| Gemini
+            
+            Threads -->|Parallel Requests| SerpApi
+            SerpApi -->|Job Market Data| Threads
+            SerpApi -->|Tutorial Links| Gemini
+            
+            Gemini -->|Cover Letter / Learning Plan| Router
+            Router -->|Final Dashboard| User
+        </pre>
+    </div>
+    <div class="caption">Fig 1. High-level architectural data flow of the RJM-Agent system, highlighting the parallel processing and agentic integration.</div>
+
+
+    <!-- FIGURE 2: AGENTIC WORKFLOW -->
+    <h2>Figure 2: Agentic "Tool-Use" Workflow</h2>
+    <div class="diagram-box">
+        <pre class="mermaid">
+        sequenceDiagram
+            autonumber
+            actor User
+            participant Flask as Flask Backend
+            participant Tool as SerpApi (Search Tool)
+            participant AI as Gemini 2.5 (Agent)
+
+            Note over User, AI: Scenario: User requests a "Learning Plan" for missing skills
+            
+            User->>Flask: Click "Create Learning Plan"
+            Flask->>Flask: Identify Missing Skills (e.g., Docker)
+            
+            rect rgb(240, 248, 255)
+                Note right of Flask: Phase 1: Tool Execution
+                Flask->>Tool: GET /search?q="Best free Docker tutorial 2025"
+                Tool-->>Flask: Return JSON {Title, URL, Source}
+            end
+            
+            rect rgb(255, 248, 240)
+                Note right of Flask: Phase 2: Agentic Synthesis
+                Flask->>AI: Prompt: "Create plan for [Role] using [URL]"
+                AI-->>Flask: Generated HTML Plan (Context-Aware)
+            end
+            
+            Flask-->>User: Display Modal with Plan & Live Links
+        </pre>
+    </div>
+    <div class="caption">Fig 2. Sequence diagram illustrating the Agentic Workflow where the system autonomously retrieves external resources before generating content.</div>
+
+</div>
+
+</body>
+</html>

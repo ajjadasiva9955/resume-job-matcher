@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>App Setup</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* BACKGROUND (MATCH INDEX) */
+body {
+    margin: 0;
+    height: 100vh;
+
+    background:
+        radial-gradient(circle at 20% 20%, #7dafff 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, #fff3c4 0%, transparent 40%),
+        radial-gradient(circle at center, #2f3e5c 0%, #111827 100%);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* GLOW EFFECT */
+body::before {
+    content: "";
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, #6ea8ff, transparent);
+    filter: blur(120px);
+    opacity: 0.3;
+    top: -100px;
+    left: -100px;
+}
+
+/* MAIN CARD */
+.card {
+    position: relative;
+
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(30px);
+
+    border-radius: 16px;
+    padding: 40px;
+    width: 480px;
+
+    text-align: center;
+
+    border: 1px solid rgba(255,255,255,0.2);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.4),
+        inset 0 1px 1px rgba(255,255,255,0.2);
+
+    transition: 0.4s;
+}
+
+/* 3D + LIGHT */
+.card:hover {
+    transform: translateY(-10px) scale(1.03);
+
+    box-shadow:
+        0 25px 80px rgba(110,168,255,0.6),
+        0 0 40px rgba(110,168,255,0.5);
+}
+
+/* TITLE */
+h2 {
+    margin-top: 0;
+    color: rgb(255, 255, 255);
+    font-size:28px;
+}
+
+/* TEXT */
+p {
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+/* SECTION BOX */
+.api-section {
+    text-align: left;
+    margin-bottom: 25px;
+
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+
+    padding: 15px;
+    border-radius: 10px;
+
+    border: 1px solid rgba(255,255,255,0.2);
+
+    transition: 0.3s;
+}
+
+/* HOVER GLOW */
+.api-section:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px rgba(110,168,255,0.4);
+}
+
+/* LABEL */
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+}
+
+/* INPUT */
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+
+    border-radius: 8px;
+    border: none;
+
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+
+    color: #fff;
+
+    outline: none;
+    transition: 0.3s;
+
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* INPUT FOCUS */
+input[type="text"]:focus {
+    box-shadow: 0 0 20px rgba(110,168,255,0.6);
+    background: rgba(255,255,255,0.15);
+}
+
+/* LINKS */
+.links {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #dddddd;
+    display: flex;
+    justify-content: space-between;
+}
+
+.links a {
+    color: rgb(241, 204, 20);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.links a:hover {
+    text-decoration: underline;
+}
+
+/* BUTTON */
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+
+    border: none;
+    border-radius: 30px;
+
+    background: linear-gradient(135deg, #6ea8ff, #9b8cff);
+    color: #fff;
+
+    font-weight: 600;
+    font-size: 16px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+    box-shadow: 0 10px 30px rgba(110,168,255,0.4);
+}
+
+/* BUTTON HOVER */
+.submit-btn:hover {
+    transform: scale(1.05) translateY(-3px);
+
+    box-shadow:
+        0 20px 60px rgba(110,168,255,0.6),
+        0 0 30px rgba(155,140,255,0.6);
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <!-- ✅ ONLY CHANGE -->
+    <h2>SkillBridge.AI Setup</h2>
+
+    <p>Connect services to enable Job Search & AI Agents</p>
+
+    <form action="/setup" method="POST">
+
+        <!-- SECTION 1 -->
+        <div class="api-section">
+            <label for="api_key">1. SerpApi Key (For Job Listings)</label>
+            <input type="text" name="api_key" id="api_key" placeholder="Paste SerpApi Key here..." required>
+
+            <div class="links">
+                <span>Don't have a key?</span>
+                <div>
+                    <a href="https://serpapi.com/users/sign_in" target="_blank">Login</a>
+                    <span style="margin:0 4px;">|</span>
+                    <a href="https://serpapi.com/users/sign_up" target="_blank">Create Account</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2 -->
+        <div class="api-section">
+            <label for="gemini_key">2. Gemini API Key (For AI Agents)</label>
+            <input type="text" name="gemini_key" id="gemini_key" placeholder="Paste Gemini API Key here..." required>
+
+            <div class="links">
+                <span>Free from Google</span>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank">Get API Key 🔑</a>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Save & Launch 🚀</button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Analysis Results</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+* { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at 20% 20%, #7dafff 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, #fff3c4 0%, transparent 40%),
+        radial-gradient(circle at center, #2f3e5c 0%, #111827 100%);
+    color: #fff;
+}
+
+/* NAVBAR */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 40px;
+
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+}
+
+/* BRAND NAME */
+.navbar b {
+    font-size: 24px;
+    transition: 0.s;
+    cursor: pointer;
+    color: rgba(255,230,100,0.8);
+}
+
+/* GOLDEN GLOW */
+.navbar b:hover {
+    color: rgba(255,230,100,0.8);
+    
+}
+
+/* NAV LINKS */
+.nav-right a {
+    margin-left: 20px;
+    text-decoration: none;
+    color: #fff;
+    transition: 0.3s;
+}
+
+/* BLUE GLOW */
+.nav-right a:hover {
+    color: #9bbcff;
+    text-shadow:
+        0 0 10px #6ea8ff,
+        0 0 25px #6ea8ff,
+        0 0 40px #9bbcff;
+}
+
+/* MAIN */
+.main-wrapper {
+    display: grid;
+    grid-template-columns: 85% 15%;
+    margin-top: 80px;
+}
+
+/* BOX */
+.box, .job-card, .suggestion-box, .contact {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(25px);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: 0.3s;
+}
+
+.box:hover, .job-card:hover, .suggestion-box:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px rgba(110,168,255,0.5);
+}
+
+/* TAGS */
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag {
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 20px;
+}
+
+/* 🔥 APPLY BUTTON FIXED */
+.apply-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: linear-gradient(135deg,#6ea8ff,#9b8cff);
+    color: #fff;
+    text-decoration: none;
+
+    transition: 0.3s;
+
+    box-shadow: 0 8px 25px rgba(110,168,255,0.4);
+}
+
+/* APPLY BUTTON GLOW */
+.apply-btn:hover {
+    transform: translateY(-3px) scale(1.07);
+
+    box-shadow:
+        0 20px 60px rgba(110,168,255,0.7),
+        0 0 30px rgba(110,168,255,0.6);
+
+    background: linear-gradient(135deg,#8bbcff,#b19cff);
+}
+
+/* AI BUTTON */
+.agent-btn {
+    padding: 10px 18px;
+    border-radius: 25px;
+    border: none;
+
+    background: linear-gradient(135deg,#fff3c4,#ffe066);
+    color: #333;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+    box-shadow: 0 8px 25px rgba(255,230,100,0.4);
+
+    margin-top: 10px;
+}
+
+.agent-btn:hover {
+    transform: translateY(-3px) scale(1.07);
+    box-shadow:
+        0 20px 50px rgba(255,230,100,0.8),
+        0 0 30px rgba(255,230,100,0.6);
+}
+
+/* CONTACT */
+.contact {
+    text-align: center;
+}
+
+/* ICONS */
+.contact-icons {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-top: 15px;
+}
+
+.contact-icons a {
+    font-size: 22px;
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+    padding: 14px;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.contact-icons a:hover {
+    transform: scale(1.2);
+    box-shadow:
+        0 0 25px rgba(110,168,255,0.8),
+        0 0 50px rgba(255,230,100,0.5);
+}
+
+/* MODAL */
+.modal {
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.6);
+}
+
+.modal-content {
+    background:white;
+    color:black;
+    margin:5% auto;
+    padding:30px;
+    width:60%;
+    border-radius:16px;
+}
+
+.close {
+    float:right;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div><b>SkillBridge.AI</b></div>
+    <div class="nav-right">
+        <a href="/">Home</a>
+        <a href="#skills">Career-Advice</a>
+        <a href="#jobs">Find-Jobs</a>
+        <a href="#contact">Contact</a>
+    </div>
+</div>
+
+<div class="main-wrapper">
+
+<div style="padding:30px">
+
+<h2><i class="fas fa-bullseye"></i> Resume Analysis Results</h2>
+
+{% if missing_skills %}
+<div class="suggestion-box">
+    <h3><i class="fas fa-robot"></i> AI Career Coach</h3>
+
+    {% for role, m_skills in missing_skills.items() %}
+        <p><b>{{ role }}</b></p>
+
+        <div class="tags">
+            {% for skill in m_skills %}
+                <span class="tag">{{ skill }}</span>
+            {% endfor %}
+        </div>
+
+        <button class="agent-btn" onclick="generatePlan('{{ role }}')">
+            Create Learning Plan
+        </button>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="box" id="skills">
+    <h3><i class="fas fa-lightbulb"></i> Extracted Skills</h3>
+    <div class="tags">
+        {% for skill in skills %}
+        <span class="tag">{{ skill }}</span>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="box">
+    <h3><i class="fas fa-user-tie"></i> Matched Roles</h3>
+    <div class="tags">
+        {% for role in roles %}
+        <span class="tag">{{ role }}</span>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="jobs">
+<h3><i class="fas fa-briefcase"></i> Job Listings</h3>
+
+{% for job in jobs %}
+<div class="job-card">
+    <h4>{{ job.title }}</h4>
+    <p>{{ job.company_name }}</p>
+    <p><i class="fas fa-map-marker-alt"></i> {{ job.location }}</p>
+
+    {% if job.apply_options %}
+    <a class="apply-btn" href="{{ job.apply_options[0].link }}" target="_blank">Apply</a>
+    {% endif %}
+
+    <button class="agent-btn"
+    onclick="generateCover('{{ job.title }}','{{ job.company_name }}','{{ job.location }}')">
+    AI Cover Letter
+    </button>
+</div>
+{% endfor %}
+</div>
+
+<div class="contact" id="contact">
+<h3><i class="fas fa-address-book"></i> CONTACT US</h3>
+
+<div class="contact-icons">
+<a href="mailto:ajjadasiva9955@gmail.com"><i class="fas fa-envelope"></i></a>
+<a href="tel:+919390144782"><i class="fas fa-phone"></i></a>
+<a href="https://www.linkedin.com/in/sivasankarajjada" target="_blank"><i class="fab fa-linkedin"></i></a>
+<a href="https://github.com/ajjadasiva9955" target="_blank"><i class="fab fa-github"></i></a>
+</div>
+
+<p>© SkillBridge.AI</p>
+<p>Andhra Pradesh, Visakhapatnam</p>
+</div>
+
+</div>
+
+<div style="padding:20px">
+<h4><i class="fas fa-chart-line"></i> Market Demand</h4>
+{% for item in market_insights %}
+<p>{{ item.role }} - {{ item.count }}</p>
+{% endfor %}
+</div>
+
+</div>
+
+<div id="modal" class="modal">
+<div class="modal-content">
+<span class="close" onclick="closeModal()">&times;</span>
+<div id="modalText"></div>
+</div>
+</div>
+
+<script>
+function closeModal(){
+    document.getElementById("modal").style.display="none";
+}
+
+async function generateCover(title, company, location){
+    document.getElementById("modal").style.display="block";
+
+    const res = await fetch('/generate-cover-letter',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({job_title:title, company:company, location:location})
+    });
+
+    const data = await res.json();
+    document.getElementById("modalText").innerHTML = data.content;
+}
+
+async function generatePlan(role){
+    document.getElementById("modal").style.display="block";
+
+    const res = await fetch('/generate-learning-plan',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({role:role})
+    });
+
+    const data = await res.json();
+    document.getElementById("modalText").innerHTML = data.content;
+}
+</script>
+
+</body>
+</html>

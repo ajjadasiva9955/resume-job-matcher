@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SkillBridge.AI</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+/* 🔥 PREMIUM RADIAL BACKGROUND */
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:
+        radial-gradient(circle at 20% 20%, #7dafff 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, #fff3c4 0%, transparent 40%),
+        radial-gradient(circle at center, #2f3e5c 0%, #111827 100%);
+
+    overflow:hidden;
+}
+
+/* GLOW LAYER */
+body::before{
+    content:"";
+    position:absolute;
+    width:600px;
+    height:600px;
+    background:radial-gradient(circle,#6ea8ff,transparent);
+    filter:blur(120px);
+    opacity:0.3;
+    top:-100px;
+    left:-100px;
+}
+
+/* 🔷 GLASS CARD */
+.card{
+    position:relative;
+    width:480px;
+    padding:60px;
+    border-radius:18px;
+
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(30px);
+
+    border:1px solid rgba(255,255,255,0.15);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.4),
+        inset 0 1px 1px rgba(255,255,255,0.2);
+
+    text-align:center;
+    color:#fff;
+
+    transition:all 0.4s ease;
+}
+
+/* 💡 LIGHT GLOW ON HOVER */
+.card:hover{
+    transform:translateY(-12px) scale(1.03);
+
+    box-shadow:
+        0 25px 80px rgba(110,168,255,0.6),
+        0 0 40px rgba(110,168,255,0.5);
+
+    background:rgba(255,255,255,0.15);
+}
+
+/* TEXT */
+.card p{
+    color:rgba(255,255,255,0.8);
+}
+
+/* 🔲 UPLOAD BOX */
+.upload-box{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    margin-top:25px;
+    padding:28px;
+
+    border-radius:14px;
+
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(20px);
+
+    border:1px solid rgba(255,255,255,0.2);
+
+    cursor:pointer;
+    transition:0.3s;
+}
+
+/* LIGHT EFFECT */
+.upload-box:hover{
+    transform:scale(1.05);
+    background:rgba(255,255,255,0.15);
+    box-shadow:0 0 25px rgba(110,168,255,0.5);
+}
+
+.upload-box input{
+    display:none;
+}
+
+/* BUTTON */
+button{
+    margin-top:25px;
+    padding:14px 30px;
+
+    border:none;
+    border-radius:30px;
+
+    background:linear-gradient(135deg,#6ea8ff,#9b8cff);
+    color:#fff;
+
+    font-weight:600;
+    font-size:15px;
+
+    cursor:pointer;
+
+    transition:all 0.3s ease;
+
+    box-shadow:0 10px 30px rgba(110,168,255,0.4);
+}
+
+/* BUTTON GLOW */
+button:hover{
+    transform:translateY(-4px) scale(1.07);
+
+    box-shadow:
+        0 20px 60px rgba(110,168,255,0.6),
+        0 0 30px rgba(155,140,255,0.6);
+
+    background:linear-gradient(135deg,#8bbcff,#b19cff);
+}
+
+/* FILE NAME */
+.file-name{
+    margin-top:10px;
+    font-size:13px;
+    color:#ddd;
+}
+
+/* LOADER */
+.loader{
+    display:none;
+    margin-top:15px;
+    font-size:14px;
+    color:#ddd;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>SkillBridge.AI</h2>
+    <p>Upload your resume and get suitable job roles instantly</p>
+    
+
+    <form action="/upload" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+
+        <label class="upload-box">
+            <div style="font-size:40px;">📄</div>
+            <div>Click or Drag & Drop Resume</div>
+            <input type="file" name="resume" id="resume" required onchange="showFileName()">
+            <div class="file-name" id="fileName"></div>
+        </label>
+
+        <button type="submit">Analyze 🚀</button>
+
+        <div class="loader" id="loader">Analyzing resume...</div>
+    </form>
+</div>
+
+<script>
+function showFileName(){
+    const input=document.getElementById("resume");
+    const fileName=document.getElementById("fileName");
+
+    if(input.files.length>0){
+        fileName.textContent=input.files[0].name;
+    }
+}
+
+function showLoader(){
+    document.getElementById("loader").style.display="block";
+}
+</script>
+
+</body>
+</html>
