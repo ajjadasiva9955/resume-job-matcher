@@ -324,6 +324,7 @@ button {
 
 .glass-nav {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), transparent 42%), var(--glass-1);
+    overflow: visible;
 }
 
 .glass-card,
@@ -425,6 +426,27 @@ button {
 :root[data-theme="light"] .service-icon {
     color: #403800;
     background: linear-gradient(135deg, #ffffb8 0%, var(--primary) 46%, #d6d000 76%, #8a7a00 100%);
+}
+
+.navbar-logo-mark {
+    overflow: hidden;
+    padding: 3px;
+}
+
+.navbar-logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: calc(var(--radius-md) - 2px);
+    transform: translate3d(0, 0, 0);
+    animation: logoReveal 420ms var(--ease) both;
+    transition: transform 180ms var(--ease), filter 180ms var(--ease);
+}
+
+.brand:hover .navbar-logo {
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 10px rgba(var(--primary-rgb), 0.34));
 }
 
 .navbar {
@@ -1417,6 +1439,17 @@ button {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes logoReveal {
+    from {
+        opacity: 0;
+        transform: scale(0.94);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
     }
 }
 

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkillBridge.AI | Setup</title>
+    <link rel="icon"
+        type="image/png"
+        href="{{ url_for('static', filename='images/skillbridge-icon.png') }}">
     <script>
         (function () {
             var saved = localStorage.getItem("skillbridge-theme");
@@ -34,7 +37,9 @@
         <div class="container">
             <div class="nav-inner glass-nav">
                 <a class="brand" href="/" aria-label="SkillBridge.AI home">
-                    <span class="brand-mark" aria-hidden="true">AI</span>
+                    <span class="brand-mark navbar-logo-mark" aria-hidden="true">
+                        <img class="navbar-logo" src="{{ url_for('static', filename='images/skillbridge-icon.png') }}" alt="">
+                    </span>
                     <span>SkillBridge.AI</span>
                 </a>
                 <div class="nav-actions">
