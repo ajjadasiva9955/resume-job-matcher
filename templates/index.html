@@ -4,15 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkillBridge.AI | Resume Intelligence</title>
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (light ? "light" : "dark"));
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
 </head>
 <body>
+<div class="sky-scene" aria-hidden="true">
+    <span class="moon"></span>
+    <span class="sun"></span>
+    <span class="planet planet-one"></span>
+    <span class="planet planet-two"></span>
+</div>
+<div class="ambient" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
 <div class="app-shell">
     <header class="navbar" aria-label="Primary navigation">
         <div class="container">
             <div class="nav-inner glass-nav">
                 <a class="brand" href="/" aria-label="SkillBridge.AI home">
-                    <span class="brand-mark" aria-hidden="true">✦</span>
+                    <span class="brand-mark" aria-hidden="true">AI</span>
                     <span>SkillBridge.AI</span>
                 </a>
 
@@ -24,11 +46,13 @@
                         <a class="nav-link" href="#contact">Contact</a>
                     </nav>
                     <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
-                        <span class="sun" aria-hidden="true">☀</span>
-                        <span class="moon" aria-hidden="true">☾</span>
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-icon sun-label">Sun</span>
+                            <span class="theme-icon moon-label">Moon</span>
+                        </span>
                     </button>
                     <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu" aria-expanded="false">
-                        ☰
+                        <span></span><span></span><span></span>
                     </button>
                 </div>
             </div>
@@ -37,46 +61,51 @@
 
     <main class="hero">
         <div class="container hero-grid">
-            <section class="hero-copy fade-up" id="career-advice">
-                <span class="eyebrow">✦ AI Career Agent</span>
+            <section class="hero-copy reveal-up" id="career-advice">
+                <span class="eyebrow">AI Career Agent</span>
                 <h1>Turn Your Resume Into Your Next Opportunity</h1>
                 <p class="lead">
-                    SkillBridge.AI analyzes your resume, identifies your strongest skills, maps them to relevant roles,
-                    and helps you move faster from profile to opportunity.
+                    SkillBridge.AI reads your resume, extracts your career signals, maps them to suitable roles,
+                    and helps you move from raw profile to real opportunities with an AI-powered workflow.
                 </p>
                 <div class="hero-points" aria-label="Platform highlights">
                     <span class="mini-pill">Resume intelligence</span>
                     <span class="mini-pill">Role matching</span>
-                    <span class="mini-pill">AI career coach</span>
+                    <span class="mini-pill">Skill-gap guidance</span>
                     <span class="mini-pill">Job discovery</span>
                 </div>
             </section>
 
-            <section class="upload-panel glass-panel fade-up" id="upload" aria-labelledby="upload-title">
+            <section class="upload-panel glass-panel premium-glass reveal-up delay-1" id="upload" aria-labelledby="upload-title">
+                <div class="panel-orbit" aria-hidden="true"></div>
                 <div class="panel-content">
                     <span class="badge">PDF Resume Upload</span>
                     <h2 class="panel-title" id="upload-title">AI-Powered Resume Intelligence</h2>
                     <p class="panel-subtitle">
-                        Upload your resume and let your career agent surface suitable roles, missing skills, and market opportunities.
+                        Upload your resume and launch a dashboard with detected skills, matched roles, job listings,
+                        market demand, cover-letter help, and learning plans.
                     </p>
 
                     <form action="/upload" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
                         <label class="upload-zone" data-upload-zone for="resume">
-                            <span class="upload-icon icon-box" aria-hidden="true">📄</span>
+                            <span class="upload-icon icon-box" aria-hidden="true">PDF</span>
                             <span class="upload-title">Click or drag your resume here</span>
-                            <span class="upload-help">PDF files work best. Your selected file will appear below before analysis.</span>
+                            <span class="upload-help">PDF files work best. Your selected filename and size will appear here before analysis.</span>
                             <input type="file" name="resume" id="resume" required onchange="showFileName()" accept=".pdf,application/pdf">
                             <span class="file-meta" id="fileName" aria-live="polite"></span>
                         </label>
 
                         <div class="button-row">
-                            <button class="primary-button" type="submit" data-submit-upload>Analyze Resume →</button>
-                            <span class="secure-note">Analysis begins after upload. No page behavior has been changed.</span>
+                            <button class="primary-button" type="submit" data-submit-upload>
+                                <span>Analyze Resume</span>
+                                <span aria-hidden="true">-&gt;</span>
+                            </button>
+                            <span class="secure-note">Your existing upload flow is preserved.</span>
                         </div>
 
                         <div class="loader" id="loader" role="status" aria-live="polite">
-                            <span class="loader-dot" aria-hidden="true"></span>
-                            <span>Analyzing your resume...</span>
+                            <span class="loader-mark" aria-hidden="true"></span>
+                            <span>AI is analyzing your resume...</span>
                         </div>
                     </form>
                 </div>
@@ -86,17 +115,17 @@
 
     <footer class="section" id="contact">
         <div class="container">
-            <div class="glass-panel contact-card">
+            <div class="glass-panel contact-card reveal-up">
                 <span class="badge">Contact</span>
                 <h2 class="panel-title">SkillBridge.AI Support</h2>
                 <p class="panel-subtitle">Questions, feedback, or career-platform ideas can reach the project owner directly.</p>
                 <div class="contact-icons" aria-label="Contact links">
-                    <a href="mailto:ajjadasiva9955@gmail.com" aria-label="Email">✉</a>
-                    <a href="tel:+919390144782" aria-label="Phone">☎</a>
+                    <a href="mailto:ajjadasiva9955@gmail.com" aria-label="Email">Mail</a>
+                    <a href="tel:+919390144782" aria-label="Phone">Call</a>
                     <a href="https://www.linkedin.com/in/sivasankarajjada" target="_blank" rel="noopener" aria-label="LinkedIn">in</a>
                     <a href="https://github.com/ajjadasiva9955" target="_blank" rel="noopener" aria-label="GitHub">GH</a>
                 </div>
-                <p class="contact-copy">© SkillBridge.AI · Andhra Pradesh, Visakhapatnam</p>
+                <p class="contact-copy">Copyright SkillBridge.AI / Andhra Pradesh, Visakhapatnam</p>
             </div>
         </div>
     </footer>

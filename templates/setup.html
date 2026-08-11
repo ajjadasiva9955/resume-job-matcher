@@ -4,15 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkillBridge.AI | Setup</title>
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (light ? "light" : "dark"));
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
 </head>
 <body class="setup-page">
+<div class="sky-scene" aria-hidden="true">
+    <span class="moon"></span>
+    <span class="sun"></span>
+    <span class="planet planet-one"></span>
+    <span class="planet planet-two"></span>
+</div>
+<div class="ambient" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
 <div class="app-shell">
     <header class="navbar" aria-label="Primary navigation">
         <div class="container">
             <div class="nav-inner glass-nav">
                 <a class="brand" href="/" aria-label="SkillBridge.AI home">
-                    <span class="brand-mark" aria-hidden="true">✦</span>
+                    <span class="brand-mark" aria-hidden="true">AI</span>
                     <span>SkillBridge.AI</span>
                 </a>
                 <div class="nav-actions">
@@ -22,11 +44,13 @@
                         <a class="nav-link" href="#security">Security</a>
                     </nav>
                     <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
-                        <span class="sun" aria-hidden="true">☀</span>
-                        <span class="moon" aria-hidden="true">☾</span>
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-icon sun-label">Sun</span>
+                            <span class="theme-icon moon-label">Moon</span>
+                        </span>
                     </button>
                     <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu" aria-expanded="false">
-                        ☰
+                        <span></span><span></span><span></span>
                     </button>
                 </div>
             </div>
@@ -35,39 +59,41 @@
 
     <main class="hero">
         <div class="container setup-grid">
-            <section class="hero-copy fade-up">
-                <span class="eyebrow">✦ Secure Onboarding</span>
+            <section class="hero-copy reveal-up">
+                <span class="eyebrow">Secure Onboarding</span>
                 <h1 class="page-title">Welcome to SkillBridge.AI</h1>
                 <p class="lead">
-                    Connect your AI and job-search services to unlock your career agent. Once saved, you can upload a resume and generate role matches, job listings, cover letters, and learning plans.
+                    Connect your AI and job-search services to unlock your career agent. Once saved, you can upload a
+                    resume and generate role matches, job listings, cover letters, and learning plans.
                 </p>
                 <div class="trust-row" id="security">
                     <span class="mini-pill">Session-based setup</span>
-                    <span class="mini-pill">AI agent access</span>
-                    <span class="mini-pill">Job-search service</span>
+                    <span class="mini-pill">AI career actions</span>
+                    <span class="mini-pill">Live job search</span>
                 </div>
             </section>
 
-            <section class="setup-card glass-panel fade-up" id="services" aria-labelledby="setup-title">
+            <section class="setup-card glass-panel premium-glass reveal-up delay-1" id="services" aria-labelledby="setup-title">
                 <span class="badge">API Connections</span>
-                <h2 class="panel-title" id="setup-title">Launch Your Career Agent</h2>
+                <h2 class="panel-title" id="setup-title">Save & Launch Your Career Agent</h2>
                 <p class="panel-subtitle">Add the service keys used by this Flask app to power job search and AI responses.</p>
 
                 <form class="setup-form" action="/setup" method="POST">
                     <div class="api-section glass-card">
                         <div class="api-head">
-                            <span class="step-number">1</span>
+                            <span class="step-number">01</span>
+                            <span class="service-icon" aria-hidden="true">JS</span>
                             <div>
-                                <label class="api-title" for="api_key">SerpAPI Key</label>
-                                <p class="api-desc">Enables live job listings for matched roles.</p>
+                                <label class="api-title" for="api_key">Job Search Intelligence</label>
+                                <p class="api-desc">SerpAPI powers live job listings and market demand lookups for matched roles.</p>
                             </div>
                         </div>
                         <input class="glass-input" type="password" name="api_key" id="api_key" placeholder="Paste SerpAPI key here..." required autocomplete="off">
                         <div class="links">
-                            <span>Need a key?</span>
+                            <span>SerpAPI</span>
                             <span>
                                 <a href="https://serpapi.com/users/sign_in" target="_blank" rel="noopener">Login</a>
-                                <span aria-hidden="true"> · </span>
+                                <span aria-hidden="true"> / </span>
                                 <a href="https://serpapi.com/users/sign_up" target="_blank" rel="noopener">Create account</a>
                             </span>
                         </div>
@@ -75,20 +101,24 @@
 
                     <div class="api-section glass-card">
                         <div class="api-head">
-                            <span class="step-number">2</span>
+                            <span class="step-number">02</span>
+                            <span class="service-icon" aria-hidden="true">AI</span>
                             <div>
-                                <label class="api-title" for="gemini_key">Gemini API Key</label>
-                                <p class="api-desc">Enables AI cover letters and learning plans.</p>
+                                <label class="api-title" for="gemini_key">AI Career Agent</label>
+                                <p class="api-desc">Gemini API powers AI cover letters and personalized learning plans.</p>
                             </div>
                         </div>
                         <input class="glass-input" type="password" name="gemini_key" id="gemini_key" placeholder="Paste Gemini API key here..." required autocomplete="off">
                         <div class="links">
-                            <span>Free from Google AI Studio</span>
+                            <span>Gemini API</span>
                             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get API key</a>
                         </div>
                     </div>
 
-                    <button type="submit" class="primary-button">Save & Launch →</button>
+                    <button type="submit" class="primary-button">
+                        <span>Save & Launch</span>
+                        <span aria-hidden="true">-&gt;</span>
+                    </button>
                     <p class="secure-note">Your API keys are handled through your application session.</p>
                 </form>
             </section>

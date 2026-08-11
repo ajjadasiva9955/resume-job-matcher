@@ -10,7 +10,9 @@
         root.setAttribute("data-theme", theme);
         localStorage.setItem("skillbridge-theme", theme);
         document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
-            button.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+            const nextTheme = theme === "dark" ? "light" : "dark";
+            button.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
+            button.setAttribute("aria-pressed", String(theme === "light"));
         });
     }
 
@@ -21,6 +23,25 @@
         return `${(bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0)} ${units[index]}`;
     }
 
+    function numericDemand(value) {
+        const cleaned = String(value || "").replace(/[^\d]/g, "");
+        return cleaned ? Number(cleaned) : 0;
+    }
+
+    function hydrateDemandBars() {
+        const items = Array.from(document.querySelectorAll("[data-demand-count]"));
+        if (!items.length) return;
+
+        const values = items.map((item) => numericDemand(item.dataset.demandCount));
+        const max = Math.max(...values, 1);
+
+        items.forEach((item, index) => {
+            const value = values[index];
+            const width = value ? Math.max(18, Math.round((value / max) * 100)) : 42;
+            item.style.setProperty("--demand-width", `${width}%`);
+        });
+    }
+
     window.showFileName = function showFileName() {
         const input = document.getElementById("resume");
         const fileName = document.getElementById("fileName");
@@ -29,7 +50,7 @@
         if (input && fileName && input.files.length > 0) {
             const file = input.files[0];
             const size = formatBytes(file.size);
-            fileName.textContent = size ? `${file.name} • ${size}` : file.name;
+            fileName.textContent = size ? `${file.name} / ${size}` : file.name;
             if (uploadZone) uploadZone.classList.add("has-file");
         }
     };
@@ -40,7 +61,7 @@
         if (loader) loader.classList.add("is-visible");
         if (submit) {
             submit.setAttribute("aria-busy", "true");
-            submit.textContent = "Analyzing resume...";
+            submit.innerHTML = "<span>Analyzing resume...</span>";
         }
     };
 
@@ -62,36 +83,52 @@
         modalText.innerHTML = `<div class="thinking"><span class="thinking-dot"></span>${message || "AI Agent is thinking..."}</div>`;
     }
 
+    function showModalError() {
+        const modalText = document.getElementById("modalText");
+        if (modalText) {
+            modalText.innerHTML = '<div class="reveal">The AI response could not be loaded. Please try again.</div>';
+        }
+    }
+
     window.generateCover = async function generateCover(title, company, location) {
         openModal("AI Agent is thinking...");
 
-        const res = await fetch("/generate-cover-letter", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ job_title: title, company: company, location: location })
-        });
+        try {
+            const res = await fetch("/generate-cover-letter", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ job_title: title, company: company, location: location })
+            });
 
-        const data = await res.json();
-        const modalText = document.getElementById("modalText");
-        if (modalText) modalText.innerHTML = `<div class="reveal">${data.content}</div>`;
+            const data = await res.json();
+            const modalText = document.getElementById("modalText");
+            if (modalText) modalText.innerHTML = `<div class="reveal">${data.content}</div>`;
+        } catch (error) {
+            showModalError();
+        }
     };
 
     window.generatePlan = async function generatePlan(role) {
         openModal("AI Agent is thinking...");
 
-        const res = await fetch("/generate-learning-plan", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ role: role })
-        });
+        try {
+            const res = await fetch("/generate-learning-plan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ role: role })
+            });
 
-        const data = await res.json();
-        const modalText = document.getElementById("modalText");
-        if (modalText) modalText.innerHTML = `<div class="reveal">${data.content}</div>`;
+            const data = await res.json();
+            const modalText = document.getElementById("modalText");
+            if (modalText) modalText.innerHTML = `<div class="reveal">${data.content}</div>`;
+        } catch (error) {
+            showModalError();
+        }
     };
 
     document.addEventListener("DOMContentLoaded", () => {
         setTheme(root.getAttribute("data-theme") || initialTheme);
+        hydrateDemandBars();
 
         document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
             button.addEventListener("click", () => {
@@ -105,6 +142,11 @@
             menuToggle.addEventListener("click", () => {
                 const isOpen = navLinks.classList.toggle("is-open");
                 menuToggle.setAttribute("aria-expanded", String(isOpen));
+            });
+
+            navLinks.addEventListener("click", () => {
+                navLinks.classList.remove("is-open");
+                menuToggle.setAttribute("aria-expanded", "false");
             });
         }
 
