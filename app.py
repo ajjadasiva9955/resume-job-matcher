@@ -87,6 +87,17 @@ from auth_db import (
     get_course_progress_stats,
     get_all_courses_progress_for_user,
 )
+from storage_manager import (
+    upload_resume_file,
+    download_resume_file,
+    delete_resume_file,
+    get_resume_bytes,
+    resume_exists,
+    get_storage_path,
+    temp_resume_context,
+    get_resume_text_content,
+    is_supabase_storage_configured,
+)
 from ats_engine import (
     analyze_resume_ats,
     extract_resume_document,
@@ -603,13 +614,19 @@ def validate_resume_document(file_storage_or_bytes, filename: str, is_profile: b
     return True, "", content_bytes
 
 
-def get_pdf_text(pdf_path):
-    if not pdf_path or not os.path.exists(pdf_path):
+def get_pdf_text(pdf_path, user_id=None):
+    if not pdf_path:
         return ""
+    if os.path.exists(pdf_path) and os.path.isfile(pdf_path):
+        try:
+            reader = PdfReader(pdf_path)
+            text = " ".join(page.extract_text() or "" for page in reader.pages)
+            return text.strip()
+        except Exception:
+            return ""
+    # Safe storage abstraction extraction (Supabase or relative path)
     try:
-        reader = PdfReader(pdf_path)
-        text = " ".join(page.extract_text() or "" for page in reader.pages)
-        return text.strip()
+        return get_resume_text_content(user_id=user_id, storage_path=pdf_path)
     except Exception:
         return ""
 
@@ -1061,6 +1078,7 @@ def download_ats_resume():
     """
     Downloads the currently stored ATS resume for the authenticated user only.
     Enforces strict session user ownership. Never exposes server filesystem paths.
+    Supports both Supabase Storage (cloud) and local uploads/ fallback.
     """
     user_id = session.get("user_id")
     ats_data = get_latest_ats_analysis(user_id)
@@ -1069,23 +1087,40 @@ def download_ats_resume():
         return redirect(url_for("upload_resume_page"))
 
     file_path = ats_data["file_path"]
-    if not os.path.isabs(file_path):
-        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
-
-    if not os.path.exists(file_path):
-        flash("Stored ATS resume file could not be found on server.", "error")
-        return redirect(url_for("ats_score_page"))
-
     download_name = ats_data.get("filename") or "ATS_Resume.pdf"
-    ext = os.path.splitext(download_name)[1].lower()
-    mimetype = "application/pdf" if ext == ".pdf" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ext = os.path.splitext(download_name)[1].lower() or ".pdf"
+    default_mimetype = "application/pdf" if ext == ".pdf" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
-    return send_file(
-        file_path,
-        as_attachment=True,
-        download_name=download_name,
-        mimetype=mimetype,
+    # 1. Try downloading from storage abstraction (Supabase or local)
+    content_bytes, _, detected_mimetype = download_resume_file(
+        user_id=user_id,
+        resume_type="ats",
+        storage_path=file_path,
     )
+    if content_bytes:
+        return send_file(
+            io.BytesIO(content_bytes),
+            as_attachment=True,
+            download_name=download_name,
+            mimetype=detected_mimetype or default_mimetype,
+        )
+
+    # 2. Local filesystem direct fallback
+    if not os.path.isabs(file_path):
+        cand_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
+        if os.path.exists(cand_path):
+            file_path = cand_path
+
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=download_name,
+            mimetype=default_mimetype,
+        )
+
+    flash("Stored ATS resume file could not be found on server.", "error")
+    return redirect(url_for("ats_score_page"))
 
 
 @app.route("/snake")
@@ -1168,54 +1203,40 @@ def upload_resume():
         return redirect(url_for("upload_resume_page"))
 
     ext = os.path.splitext(resume.filename)[1].lower()
-    user_dir = get_user_upload_dir(user_id, app.config["UPLOAD_FOLDER"])
-    os.makedirs(user_dir, exist_ok=True)
-    canonical_ats_path = get_canonical_ats_resume_path(user_id, ext=ext, base_dir=app.config["UPLOAD_FOLDER"])
-    stored_ats_filename = f"ats_resume{ext}"
 
-    # Atomic write to temporary file first, then replace canonical destination
-    temp_fd, temp_path = tempfile.mkstemp(suffix=ext, dir=user_dir)
+    # Upload ATS Resume via universal storage manager (Supabase Storage or Local Fallback)
     try:
-        with os.fdopen(temp_fd, "wb") as f:
-            f.write(content_bytes)
-        # Move/replace atomically to canonical ATS path
-        shutil.move(temp_path, canonical_ats_path)
+        upload_res = upload_resume_file(
+            user_id=user_id,
+            file_data=content_bytes,
+            original_filename=resume.filename,
+            resume_type="ats",
+        )
     except Exception as e:
-        if os.path.exists(temp_path):
-            try:
-                os.remove(temp_path)
-            except Exception:
-                pass
+        print(f"[ATS Resume Upload Error]: {e}")
         flash("Could not save ATS resume file. Please try again.", "error")
         return redirect(url_for("upload_resume_page"))
 
-    # Clean up any alternate extension ATS resume files (e.g. ats_resume.pdf vs ats_resume.docx)
-    for alt_ext in [".pdf", ".docx", ".doc"]:
-        if alt_ext != ext:
-            alt_path = os.path.join(user_dir, f"ats_resume{alt_ext}")
-            if os.path.exists(alt_path):
-                try:
-                    os.remove(alt_path)
-                except Exception:
-                    pass
+    stored_ats_filename = upload_res["stored_filename"]
+    ats_file_path = upload_res["storage_path"]
+    file_size = upload_res["file_size"]
 
-    file_size = os.path.getsize(canonical_ats_path) if os.path.exists(canonical_ats_path) else len(content_bytes)
-
-    # Deep Resume Extraction & Deterministic ATS Analysis
+    # Deep Resume Extraction & Deterministic ATS Analysis using temporary processing context
     gemini_key = user_keys.get("gemini_api_key") or session.get("gemini_api_key")
     try:
-        ats_result = analyze_resume_ats(
-            file_path=canonical_ats_path,
-            original_filename=resume.filename,
-            gemini_api_key=gemini_key,
-        )
+        with temp_resume_context(file_bytes=content_bytes, filename=resume.filename) as temp_ats_path:
+            ats_result = analyze_resume_ats(
+                file_path=temp_ats_path,
+                original_filename=resume.filename,
+                gemini_api_key=gemini_key,
+            )
 
         # Atomically save authoritative ATS analysis in database (safely replaces old analysis)
         save_ats_analysis(
             user_id=user_id,
             filename=resume.filename,
             stored_filename=stored_ats_filename,
-            file_path=canonical_ats_path,
+            file_path=ats_file_path,
             file_size=file_size,
             file_type=ext.lstrip("."),
             analysis_data=ats_result,
@@ -1228,20 +1249,20 @@ def upload_resume():
     # Check if user had an existing main profile resume
     user_resume = get_user_resume(user_id, current_only=True)
     if not user_resume:
-        # Onboarding: also initialize baseline profile resume record
-        canonical_main_path = get_canonical_main_resume_path(user_id, app.config["UPLOAD_FOLDER"])
-        if ext == ".pdf":
-            try:
-                shutil.copyfile(canonical_ats_path, canonical_main_path)
-            except Exception as e:
-                print(f"[Onboarding Main Resume Copy Notice]: {e}")
-
-        main_file_path = canonical_main_path if os.path.exists(canonical_main_path) else canonical_ats_path
-        main_stored_filename = "main_resume.pdf" if os.path.exists(canonical_main_path) else stored_ats_filename
+        # Onboarding: also upload and initialize baseline profile resume record
+        main_upload = upload_resume_file(
+            user_id=user_id,
+            file_data=content_bytes,
+            original_filename=resume.filename,
+            resume_type="main",
+        )
+        main_file_path = main_upload["storage_path"]
+        main_stored_filename = main_upload["stored_filename"]
 
         skills = ats_result.get("detected_skills", [])
         if not skills:
-            skills = extract_skills(canonical_ats_path) if ext == ".pdf" else ["Python", "SQL"]
+            with temp_resume_context(file_bytes=content_bytes, filename=resume.filename) as temp_proc_path:
+                skills = extract_skills(temp_proc_path) if ext == ".pdf" else ["Python", "SQL"]
         job_roles = map_skills_to_roles(skills)
         missing_skills = get_missing_skills(skills, job_roles)
         save_user_resume(
@@ -1344,8 +1365,10 @@ def analyze_and_find_jobs():
     try:
         # Extract or retrieve skills from stored resume
         skills = []
-        if resume_path and os.path.exists(resume_path):
-            skills = extract_skills(resume_path)
+        if resume_path:
+            with temp_resume_context(user_id=user_id, storage_path=resume_path) as proc_path:
+                if proc_path and os.path.exists(proc_path):
+                    skills = extract_skills(proc_path)
 
         if not skills and user_resume.get("extracted_data"):
             skills = user_resume["extracted_data"].get("skills", [])
@@ -1365,7 +1388,7 @@ def analyze_and_find_jobs():
         session["missing_skills_data"] = missing_skills
 
         # Build complete candidate resume data for per-job semantic & local matching
-        resume_text = get_pdf_text(resume_path) if resume_path else ""
+        resume_text = get_pdf_text(resume_path, user_id=user_id) if resume_path else ""
         if not resume_text and user_resume and user_resume.get("extracted_data"):
             resume_text = user_resume["extracted_data"].get("resume_text_preview", "")
 
@@ -2064,7 +2087,7 @@ def delete_api_key_route():
 def update_resume_route():
     """
     Uploads and activates a new Main Profile Resume for the authenticated user.
-    Enforces canonical path: uploads/user_<user_id>/main_resume.pdf.
+    Uses storage_manager abstraction (Supabase Storage if configured, or local uploads/ fallback).
     Atomically validates, replaces the previous main resume, and updates DB & session state.
     Leaves ATS Resume completely untouched.
     """
@@ -2082,33 +2105,28 @@ def update_resume_route():
         flash(err_msg, "error")
         return redirect(url_for("profile_route") + "#resume")
 
-    user_dir = get_user_upload_dir(user_id, app.config["UPLOAD_FOLDER"])
-    os.makedirs(user_dir, exist_ok=True)
-    canonical_main_path = get_canonical_main_resume_path(user_id, app.config["UPLOAD_FOLDER"])
-
-    # Atomic write to temporary file first, then replace canonical destination
-    temp_fd, temp_path = tempfile.mkstemp(suffix=".pdf", dir=user_dir)
     try:
-        with os.fdopen(temp_fd, "wb") as f:
-            f.write(content_bytes)
-        # Move/replace atomically to canonical Main Resume path
-        shutil.move(temp_path, canonical_main_path)
+        upload_res = upload_resume_file(
+            user_id=user_id,
+            file_data=content_bytes,
+            original_filename=resume_file.filename,
+            resume_type="main",
+            content_type="application/pdf",
+        )
     except Exception as e:
-        if os.path.exists(temp_path):
-            try:
-                os.remove(temp_path)
-            except Exception:
-                pass
+        print(f"[Main Resume Upload Error]: {e}")
         flash("Could not save resume file. Please try again.", "error")
         return redirect(url_for("profile_route") + "#resume")
 
-    file_size = os.path.getsize(canonical_main_path) if os.path.exists(canonical_main_path) else len(content_bytes)
+    canonical_main_path = upload_res["storage_path"]
+    file_size = upload_res["file_size"]
 
-    # Extract skills & insights using existing skill extractor pipeline
-    skills = extract_skills(canonical_main_path)
-    job_roles = map_skills_to_roles(skills)
-    missing_skills = get_missing_skills(skills, job_roles)
-    resume_text = get_pdf_text(canonical_main_path)
+    # Extract skills & insights using temporary processing context (auto cleaned up)
+    with temp_resume_context(file_bytes=content_bytes, filename=resume_file.filename) as temp_proc_path:
+        skills = extract_skills(temp_proc_path)
+        job_roles = map_skills_to_roles(skills)
+        missing_skills = get_missing_skills(skills, job_roles)
+        resume_text = get_pdf_text(temp_proc_path)
 
     extracted_payload = {
         "skills": skills,
@@ -2117,11 +2135,11 @@ def update_resume_route():
         "resume_text_preview": resume_text[:3000] if resume_text else "",
     }
 
-    # Save to user_resumes (marks previous resumes as is_current=0 and cleans up legacy file)
+    # Save to user_resumes (marks previous resumes as is_current=0)
     save_user_resume(
         user_id=user_id,
         original_filename=resume_file.filename,
-        stored_filename="main_resume.pdf",
+        stored_filename=upload_res["stored_filename"],
         file_path=canonical_main_path,
         file_size=file_size,
         file_type="pdf",
@@ -2178,6 +2196,7 @@ def download_resume_route():
     """
     Securely serves the current authenticated user's stored resume as a download attachment.
     Strictly enforces user ownership: authenticated_user_id == resume.user_id.
+    Works seamlessly across Supabase Storage and Local Storage.
     """
     user_id = session.get("user_id")
     user_resume = get_user_resume(user_id, current_only=True)
@@ -2187,20 +2206,40 @@ def download_resume_route():
         return redirect(url_for("profile_route"))
 
     file_path = user_resume["file_path"]
-    if not os.path.isabs(file_path):
-        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
-
-    if not os.path.exists(file_path):
-        flash("The resume file could not be found on the server.", "error")
-        return redirect(url_for("profile_route"))
-
     download_name = user_resume.get("original_filename") or "resume.pdf"
-    return send_file(
-        file_path,
-        as_attachment=True,
-        download_name=download_name,
-        mimetype="application/pdf",
+    ext = os.path.splitext(download_name)[1].lower() or ".pdf"
+    mimetype = "application/pdf" if ext == ".pdf" else "application/octet-stream"
+
+    # 1. Try download via storage abstraction
+    content_bytes, _, detected_mimetype = download_resume_file(
+        user_id=user_id,
+        resume_type="main",
+        storage_path=file_path,
     )
+    if content_bytes:
+        return send_file(
+            io.BytesIO(content_bytes),
+            as_attachment=True,
+            download_name=download_name,
+            mimetype=detected_mimetype or mimetype,
+        )
+
+    # 2. Local filesystem fallback
+    if not os.path.isabs(file_path):
+        cand_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
+        if os.path.exists(cand_path):
+            file_path = cand_path
+
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return send_file(
+            file_path,
+            as_attachment=True,
+            download_name=download_name,
+            mimetype=mimetype,
+        )
+
+    flash("The resume file could not be found on the server.", "error")
+    return redirect(url_for("profile_route"))
 
 
 @app.route("/resume-analyzer")
@@ -2246,7 +2285,7 @@ def generate_cover_letter_route():
             resume_path = user_resume.get("file_path")
             session["current_resume_path"] = resume_path
 
-    resume_text = get_pdf_text(resume_path) if resume_path else ""
+    resume_text = get_pdf_text(resume_path, user_id=user_id) if resume_path else ""
     data = request.get_json(silent=True) or {}
 
     try:

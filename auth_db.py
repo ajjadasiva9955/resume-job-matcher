@@ -1,4 +1,5 @@
 import os
+import re
 import sqlite3
 import base64
 import hashlib
@@ -17,15 +18,332 @@ def get_db_path():
     return os.environ.get("DATABASE_PATH", DEFAULT_DB_PATH)
 
 
+def get_database_url():
+    """
+    Returns configured PostgreSQL database URL if present.
+    Checks DATABASE_URL, SUPABASE_DB_URL, POSTGRES_URL.
+    Normalizes 'postgres://' to 'postgresql://' for standard psycopg2 compatibility.
+    """
+    raw_url = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL") or os.environ.get("POSTGRES_URL")
+    if not raw_url:
+        return None
+    url = str(raw_url).strip()
+    if not url:
+        return None
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    return url
+
+
+def is_postgres_backend():
+    """
+    Returns True if PostgreSQL backend is configured, False otherwise (SQLite).
+    """
+    return bool(get_database_url())
+
+
+def _adapt_sql(sql: str, is_postgres: bool) -> str:
+    """
+    Translates '?' parameter placeholders to '%s' for PostgreSQL
+    while preserving strings and literal question marks inside quotes/comments.
+    """
+    if not is_postgres or not sql:
+        return sql
+
+    result = []
+    i = 0
+    n = len(sql)
+    in_single_quote = False
+    in_double_quote = False
+    in_line_comment = False
+    in_block_comment = False
+
+    while i < n:
+        char = sql[i]
+        next_char = sql[i+1] if i + 1 < n else ''
+
+        if in_line_comment:
+            result.append(char)
+            if char == '\n':
+                in_line_comment = False
+            i += 1
+            continue
+
+        if in_block_comment:
+            result.append(char)
+            if char == '*' and next_char == '/':
+                result.append(next_char)
+                in_block_comment = False
+                i += 2
+                continue
+            i += 1
+            continue
+
+        if in_single_quote:
+            result.append(char)
+            if char == "'":
+                if next_char == "'":
+                    result.append(next_char)
+                    i += 2
+                    continue
+                else:
+                    in_single_quote = False
+            i += 1
+            continue
+
+        if in_double_quote:
+            result.append(char)
+            if char == '"':
+                if next_char == '"':
+                    result.append(next_char)
+                    i += 2
+                    continue
+                else:
+                    in_double_quote = False
+            i += 1
+            continue
+
+        if char == '-' and next_char == '-':
+            result.append(char)
+            result.append(next_char)
+            in_line_comment = True
+            i += 2
+            continue
+
+        if char == '/' and next_char == '*':
+            result.append(char)
+            result.append(next_char)
+            in_block_comment = True
+            i += 2
+            continue
+
+        if char == "'":
+            result.append(char)
+            in_single_quote = True
+            i += 1
+            continue
+
+        if char == '"':
+            result.append(char)
+            in_double_quote = True
+            i += 1
+            continue
+
+        if char == '?':
+            result.append('%s')
+            i += 1
+            continue
+
+        result.append(char)
+        i += 1
+
+    return ''.join(result)
+
+
+class SQLiteCursorWrapper:
+    """Wrapper around sqlite3.Cursor preserving dict-like row access and standard cursor API."""
+    def __init__(self, raw_cursor):
+        self._cursor = raw_cursor
+
+    def execute(self, query, params=None):
+        if params is not None:
+            self._cursor.execute(query, params)
+        else:
+            self._cursor.execute(query)
+        return self
+
+    def executemany(self, query, seq_of_params):
+        self._cursor.executemany(query, seq_of_params)
+        return self
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    def fetchmany(self, size=None):
+        return self._cursor.fetchmany(size) if size is not None else self._cursor.fetchmany()
+
+    @property
+    def lastrowid(self):
+        return self._cursor.lastrowid
+
+    @property
+    def rowcount(self):
+        return self._cursor.rowcount
+
+    def close(self):
+        try:
+            self._cursor.close()
+        except Exception:
+            pass
+
+    def __iter__(self):
+        return iter(self._cursor)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+
+class SQLiteConnectionWrapper:
+    """Wrapper around sqlite3.Connection ensuring foreign keys, dict rows, and safe commits."""
+    def __init__(self, db_path):
+        self._conn = sqlite3.connect(db_path)
+        self._conn.row_factory = sqlite3.Row
+        self._conn.execute("PRAGMA foreign_keys = ON;")
+
+    def cursor(self):
+        return SQLiteCursorWrapper(self._conn.cursor())
+
+    def execute(self, query, params=None):
+        cur = self.cursor()
+        cur.execute(query, params)
+        return cur
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.rollback()
+        else:
+            self.commit()
+        self.close()
+
+
+class PostgresCursorWrapper:
+    """Wrapper around psycopg2 cursor providing ?->%s adaptation, lastrowid tracking, and dict rows."""
+    def __init__(self, raw_cursor):
+        self._cursor = raw_cursor
+        self.lastrowid = None
+
+    def execute(self, query, params=None):
+        adapted_query = _adapt_sql(query, is_postgres=True)
+        stripped_upper = adapted_query.strip().upper()
+        is_insert = stripped_upper.startswith("INSERT INTO")
+        has_returning = "RETURNING" in stripped_upper
+
+        if is_insert and not has_returning:
+            table_match = re.search(r'INSERT\s+INTO\s+([a-zA-Z0-9_]+)', adapted_query, re.IGNORECASE)
+            table_name = table_match.group(1).lower() if table_match else ""
+            if table_name and table_name != "user_search_cooldown":
+                query_with_ret = adapted_query.rstrip().rstrip(';') + " RETURNING id;"
+                try:
+                    if params is not None:
+                        self._cursor.execute(query_with_ret, params)
+                    else:
+                        self._cursor.execute(query_with_ret)
+                    row = self._cursor.fetchone()
+                    if row and "id" in row:
+                        self.lastrowid = row["id"]
+                    return self
+                except Exception:
+                    pass
+
+        if params is not None:
+            self._cursor.execute(adapted_query, params)
+        else:
+            self._cursor.execute(adapted_query)
+        return self
+
+    def executemany(self, query, seq_of_params):
+        adapted_query = _adapt_sql(query, is_postgres=True)
+        self._cursor.executemany(adapted_query, seq_of_params)
+        return self
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    def fetchmany(self, size=None):
+        return self._cursor.fetchmany(size) if size is not None else self._cursor.fetchmany()
+
+    @property
+    def rowcount(self):
+        return self._cursor.rowcount
+
+    def close(self):
+        try:
+            self._cursor.close()
+        except Exception:
+            pass
+
+    def __iter__(self):
+        return iter(self._cursor)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+
+class PostgresConnectionWrapper:
+    """Wrapper around psycopg2 connection providing RealDictCursor, commit/rollback, and safe close."""
+    def __init__(self, dsn):
+        import psycopg2
+        import psycopg2.extras
+        self._conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.RealDictCursor)
+
+    def cursor(self):
+        return PostgresCursorWrapper(self._conn.cursor())
+
+    def execute(self, query, params=None):
+        cur = self.cursor()
+        cur.execute(query, params)
+        return cur
+
+    def commit(self):
+        if not self._conn.closed:
+            self._conn.commit()
+
+    def rollback(self):
+        if not self._conn.closed:
+            self._conn.rollback()
+
+    def close(self):
+        if not self._conn.closed:
+            self._conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.rollback()
+        else:
+            self.commit()
+        self.close()
+
+
 def get_db_connection():
     """
-    Returns an SQLite connection with sqlite3.Row factory and foreign keys enabled.
+    Returns a database connection wrapper.
+    If PostgreSQL is configured (DATABASE_URL), connects to PostgreSQL via psycopg2.
+    Otherwise, connects to local SQLite database with foreign keys enabled.
+    Both wrappers provide dict-like row access, commit/rollback, and identical cursor semantics.
     """
-    db_path = get_db_path()
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON;")
-    return conn
+    if is_postgres_backend():
+        db_url = get_database_url()
+        return PostgresConnectionWrapper(db_url)
+    else:
+        db_path = get_db_path()
+        return SQLiteConnectionWrapper(db_path)
 
 
 def _now_iso():
@@ -130,8 +448,290 @@ def get_key_fingerprint(raw_key):
 def init_db(app=None):
     """
     Initializes database tables if they do not already exist.
+    Supports both PostgreSQL (when DATABASE_URL is configured) and SQLite.
     Performs safe in-place migrations to preserve existing data.
     """
+    if is_postgres_backend():
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+
+            # 1. Users table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    last_login_at TEXT NULL,
+                    is_active INTEGER NOT NULL DEFAULT 1
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);")
+
+            # 2. Password reset tokens table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    token_hash TEXT NOT NULL,
+                    expires_at TEXT NOT NULL,
+                    used_at TEXT NULL,
+                    created_at TEXT NOT NULL
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_reset_token_hash ON password_reset_tokens(token_hash);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_reset_user_id ON password_reset_tokens(user_id);")
+
+            # 3. User API Keys table (encrypted per-user storage)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_api_keys (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    serpapi_key_encrypted TEXT NULL,
+                    gemini_api_key_encrypted TEXT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_api_keys_user_id ON user_api_keys(user_id);")
+
+            # 4. User Resumes table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_resumes (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    original_filename TEXT NOT NULL,
+                    stored_filename TEXT NOT NULL,
+                    file_path TEXT NOT NULL,
+                    file_type TEXT NOT NULL,
+                    file_size INTEGER NOT NULL DEFAULT 0,
+                    uploaded_at TEXT NOT NULL,
+                    processing_status TEXT NOT NULL DEFAULT 'completed',
+                    extracted_data_json TEXT NULL,
+                    is_current INTEGER NOT NULL DEFAULT 1
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_resumes_user_id ON user_resumes(user_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_resumes_current ON user_resumes(user_id, is_current);")
+
+            # 5. User Persistent Sessions / Remember Tokens table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_sessions (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    token_hash TEXT NOT NULL UNIQUE,
+                    expires_at TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    last_used_at TEXT NOT NULL,
+                    user_agent TEXT NULL,
+                    ip_address TEXT NULL
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_sessions_token_hash ON user_sessions(token_hash);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);")
+
+            # 6. Saved Jobs table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS saved_jobs (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    job_id TEXT NOT NULL,
+                    job_title TEXT NOT NULL,
+                    company TEXT NOT NULL,
+                    company_logo TEXT NULL,
+                    location TEXT NULL,
+                    employment_type TEXT NULL,
+                    experience TEXT NULL,
+                    salary TEXT NULL,
+                    match_score INTEGER NULL,
+                    posted_time TEXT NULL,
+                    application_url TEXT NULL,
+                    job_description TEXT NULL,
+                    source TEXT NULL,
+                    openings TEXT NULL,
+                    saved_at TEXT NOT NULL,
+                    UNIQUE(user_id, job_id)
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_id ON saved_jobs(user_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_job ON saved_jobs(user_id, job_id);")
+
+            # 7. Applied Jobs table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS applied_jobs (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    job_id TEXT NOT NULL,
+                    job_title TEXT NOT NULL,
+                    company TEXT NOT NULL,
+                    company_logo TEXT NULL,
+                    location TEXT NULL,
+                    employment_type TEXT NULL,
+                    experience TEXT NULL,
+                    salary TEXT NULL,
+                    match_score INTEGER NULL,
+                    posted_time TEXT NULL,
+                    application_url TEXT NULL,
+                    job_description TEXT NULL,
+                    source TEXT NULL,
+                    openings TEXT NULL,
+                    applied_at TEXT NOT NULL,
+                    UNIQUE(user_id, job_id)
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_applied_jobs_user_id ON applied_jobs(user_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_applied_jobs_user_job ON applied_jobs(user_id, job_id);")
+
+            # 8. Job Search Results table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS job_search_results (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    search_id TEXT NOT NULL UNIQUE,
+                    is_current INTEGER NOT NULL DEFAULT 1,
+                    skills_json TEXT NOT NULL,
+                    roles_json TEXT NOT NULL,
+                    role_matches_json TEXT NOT NULL,
+                    missing_skills_json TEXT NOT NULL,
+                    market_insights_json TEXT NOT NULL,
+                    jobs_data_json TEXT NOT NULL,
+                    total_jobs INTEGER NOT NULL DEFAULT 0,
+                    search_version INTEGER NOT NULL DEFAULT 1,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_job_search_user_id ON job_search_results(user_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_job_search_user_current ON job_search_results(user_id, is_current);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_job_search_search_id ON job_search_results(search_id);")
+
+            # 9. API Key History table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS api_key_history (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    service TEXT NOT NULL,
+                    key_fingerprint TEXT NOT NULL,
+                    masked_key TEXT NOT NULL,
+                    added_at TEXT NOT NULL,
+                    last_used_at TEXT NULL,
+                    status TEXT NOT NULL DEFAULT 'Current',
+                    last_known_usage INTEGER NULL,
+                    last_known_limit INTEGER NULL,
+                    last_known_hourly_usage INTEGER NULL,
+                    last_known_hourly_limit INTEGER NULL,
+                    remaining_searches INTEGER NULL,
+                    plan_name TEXT NULL,
+                    renewal_date TEXT NULL,
+                    last_error_category TEXT NULL,
+                    is_current INTEGER NOT NULL DEFAULT 1,
+                    details_json TEXT NULL
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_key_hist_user ON api_key_history(user_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_key_hist_user_svc ON api_key_history(user_id, service);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_key_hist_user_curr ON api_key_history(user_id, service, is_current);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_key_hist_fp ON api_key_history(key_fingerprint);")
+
+            # 10. API Usage Logs table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS api_usage_logs (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    service TEXT NOT NULL,
+                    feature TEXT NOT NULL,
+                    model TEXT NULL,
+                    key_fingerprint TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    success INTEGER NOT NULL DEFAULT 1,
+                    error_category TEXT NULL,
+                    error_message TEXT NULL,
+                    prompt_tokens INTEGER NULL,
+                    candidates_tokens INTEGER NULL,
+                    total_tokens INTEGER NULL,
+                    retry_after_seconds INTEGER NULL
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_usage_user ON api_usage_logs(user_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_usage_user_svc ON api_usage_logs(user_id, service);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_usage_user_time ON api_usage_logs(user_id, timestamp);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_usage_fp ON api_usage_logs(key_fingerprint);")
+
+            # 11. User Search Cooldown table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_search_cooldown (
+                    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                    last_search_started_at TEXT NULL,
+                    cooldown_until TEXT NULL,
+                    search_in_progress INTEGER NOT NULL DEFAULT 0,
+                    search_started_timestamp DOUBLE PRECISION NULL
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_search_cooldown_user ON user_search_cooldown(user_id);")
+
+            # 12. ATS Analyses table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS ats_analyses (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    filename TEXT NOT NULL,
+                    stored_filename TEXT NOT NULL,
+                    file_path TEXT NOT NULL,
+                    file_type TEXT NOT NULL,
+                    file_size INTEGER NOT NULL DEFAULT 0,
+                    uploaded_at TEXT NOT NULL,
+                    analyzed_at TEXT NOT NULL,
+                    final_score INTEGER NOT NULL DEFAULT 0,
+                    ats_readability_score INTEGER NOT NULL DEFAULT 0,
+                    content_quality_score INTEGER NOT NULL DEFAULT 0,
+                    skills_score INTEGER NOT NULL DEFAULT 0,
+                    experience_projects_score INTEGER NOT NULL DEFAULT 0,
+                    completeness_score INTEGER NOT NULL DEFAULT 0,
+                    quantification_score INTEGER NOT NULL DEFAULT 0,
+                    grammar_consistency_score INTEGER NOT NULL DEFAULT 0,
+                    score_message TEXT NULL,
+                    score_status TEXT NULL,
+                    primary_domain TEXT NULL,
+                    parsed_sections_json TEXT NULL,
+                    detected_skills_json TEXT NULL,
+                    industry_terms_json TEXT NULL,
+                    strengths_json TEXT NULL,
+                    problems_detected_json TEXT NULL,
+                    missing_sections_json TEXT NULL,
+                    weak_bullets_json TEXT NULL,
+                    recommendations_json TEXT NULL,
+                    consistency_findings_json TEXT NULL,
+                    analysis_json TEXT NULL,
+                    is_current INTEGER NOT NULL DEFAULT 1
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_ats_analyses_user_id ON ats_analyses(user_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_ats_analyses_user_curr ON ats_analyses(user_id, is_current);")
+
+            # 13. Course Topic Progress table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS course_topic_progress (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    course_id TEXT NOT NULL,
+                    topic_id TEXT NOT NULL,
+                    completed INTEGER NOT NULL DEFAULT 0,
+                    completed_at TEXT NULL,
+                    last_watched_at TEXT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE(user_id, course_id, topic_id)
+                );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_course_progress_user_course ON course_topic_progress(user_id, course_id);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_course_progress_lookup ON course_topic_progress(user_id, course_id, topic_id);")
+
+            conn.commit()
+            return
+
     os.makedirs(INSTANCE_DIR, exist_ok=True)
     with get_db_connection() as conn:
         cursor = conn.cursor()

@@ -571,21 +571,17 @@ def parse_main_profile_resume(resume_source):
     extracted_doc = None
     parsed_data = None
     if file_path:
-        if not os.path.isabs(file_path):
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            cand_path = os.path.join(base_dir, file_path)
-            if os.path.exists(cand_path):
-                file_path = cand_path
-
-        if os.path.exists(file_path):
-            try:
-                from ats_engine import extract_resume_document, parse_resume_structure
-                extracted_doc = extract_resume_document(file_path)
-                if extracted_doc and extracted_doc.get("raw_text"):
-                    raw_text = extracted_doc["raw_text"]
-                    parsed_data = parse_resume_structure(extracted_doc)
-            except Exception:
-                pass
+        try:
+            from storage_manager import temp_resume_context
+            with temp_resume_context(user_id=user_id, storage_path=file_path) as proc_path:
+                if proc_path and os.path.exists(proc_path):
+                    from ats_engine import extract_resume_document, parse_resume_structure
+                    extracted_doc = extract_resume_document(proc_path)
+                    if extracted_doc and extracted_doc.get("raw_text"):
+                        raw_text = extracted_doc["raw_text"]
+                        parsed_data = parse_resume_structure(extracted_doc)
+        except Exception:
+            pass
 
     if not raw_text and not input_skills:
         return None
