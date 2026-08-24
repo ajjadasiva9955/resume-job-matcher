@@ -2197,13 +2197,15 @@ button {
     }
 
     .modal.is-open {
-        display: flex;
+        display: flex !important;
     }
 
     .modal-content {
         width: calc(100% - 24px);
         max-width: none;
+        height: 60vh;
         height: 60dvh;
+        max-height: calc(100vh - var(--mobile-top-nav-height, 116px) - var(--mobile-bottom-nav-height, 76px) - 16px);
         max-height: calc(100dvh - var(--mobile-top-nav-height, 116px) - var(--mobile-bottom-nav-height, 76px) - 16px);
         display: flex;
         flex-direction: column;
@@ -2370,7 +2372,9 @@ button {
 
     .modal-content {
         width: calc(100% - 12px);
+        height: 60vh;
         height: 60dvh;
+        max-height: calc(100vh - var(--mobile-top-nav-height, 110px) - var(--mobile-bottom-nav-height, 72px) - 12px);
         max-height: calc(100dvh - var(--mobile-top-nav-height, 110px) - var(--mobile-bottom-nav-height, 72px) - 12px);
     }
 
