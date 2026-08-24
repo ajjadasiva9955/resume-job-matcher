@@ -451,7 +451,13 @@
         } catch (err) {
             console.error("Jarvis Chat Error:", err);
             setTyping(false);
-            appendAssistantMessage("Jarvis is temporarily unavailable. Please check your connection and try again.");
+            if (typeof navigator !== "undefined" && navigator.onLine === false) {
+                appendAssistantMessage("You appear to be offline. Please check your internet connection.");
+            } else if (err && err.name === "AbortError") {
+                appendAssistantMessage("Jarvis took longer than usual to respond. Please send your question again.");
+            } else {
+                appendAssistantMessage("Jarvis is momentarily busy or waking up. Please try sending your message again in a moment.");
+            }
         }
     }
 

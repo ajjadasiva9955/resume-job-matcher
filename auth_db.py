@@ -4,6 +4,8 @@ import sqlite3
 import base64
 import hashlib
 import json
+import threading
+import time
 from datetime import datetime, timezone, timedelta
 from cryptography.fernet import Fernet
 
@@ -293,12 +295,96 @@ class PostgresCursorWrapper:
         self.close()
 
 
+_PG_POOL = None
+_PG_POOL_LOCK = threading.Lock()
+_PG_POOL_DSN = None
+
+
+def _get_pg_pool(minconn=1, maxconn=10):
+    """
+    Returns a singleton thread-safe psycopg2 connection pool.
+    Configured with conservative bounds and TCP keep-alive for cloud stability (Render + Supabase).
+    """
+    global _PG_POOL, _PG_POOL_DSN
+    dsn = get_database_url()
+    if not dsn:
+        return None
+
+    with _PG_POOL_LOCK:
+        if _PG_POOL is None or _PG_POOL_DSN != dsn or getattr(_PG_POOL, "closed", False):
+            if _PG_POOL is not None and not getattr(_PG_POOL, "closed", False):
+                try:
+                    _PG_POOL.closeall()
+                except Exception:
+                    pass
+            import psycopg2
+            from psycopg2 import pool
+            import psycopg2.extras
+
+            _PG_POOL = pool.ThreadedConnectionPool(
+                minconn,
+                maxconn,
+                dsn,
+                cursor_factory=psycopg2.extras.RealDictCursor,
+                keepalives=1,
+                keepalives_idle=30,
+                keepalives_interval=10,
+                keepalives_count=5,
+                connect_timeout=10,
+            )
+            _PG_POOL_DSN = dsn
+        return _PG_POOL
+
+
+def close_pg_pool():
+    """Closes all connections in the global PostgreSQL connection pool."""
+    global _PG_POOL, _PG_POOL_DSN
+    with _PG_POOL_LOCK:
+        if _PG_POOL is not None:
+            try:
+                _PG_POOL.closeall()
+            except Exception:
+                pass
+            _PG_POOL = None
+            _PG_POOL_DSN = None
+
+
 class PostgresConnectionWrapper:
-    """Wrapper around psycopg2 connection providing RealDictCursor, commit/rollback, and safe close."""
-    def __init__(self, dsn):
+    """
+    Wrapper around psycopg2 connection providing RealDictCursor, commit/rollback,
+    and safe connection return to pool (or close if unpooled).
+    """
+    def __init__(self, dsn=None, conn=None, pool=None):
         import psycopg2
         import psycopg2.extras
-        self._conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.RealDictCursor)
+        self._pool = pool
+        self._is_pooled = pool is not None
+        self._closed = False
+
+        if conn is not None:
+            self._conn = conn
+        elif pool is not None:
+            raw_conn = pool.getconn()
+            # Validate connection health (reconnect if stale/closed)
+            if raw_conn.closed != 0:
+                try:
+                    pool.putconn(raw_conn, close=True)
+                except Exception:
+                    pass
+                raw_conn = pool.getconn()
+            self._conn = raw_conn
+        else:
+            actual_dsn = dsn or get_database_url()
+            self._conn = psycopg2.connect(
+                actual_dsn,
+                cursor_factory=psycopg2.extras.RealDictCursor,
+                keepalives=1,
+                keepalives_idle=30,
+                keepalives_interval=10,
+                keepalives_count=5,
+                connect_timeout=10,
+            )
+            self._is_pooled = False
 
     def cursor(self):
         return PostgresCursorWrapper(self._conn.cursor())
@@ -317,33 +403,57 @@ class PostgresConnectionWrapper:
             self._conn.rollback()
 
     def close(self):
-        if not self._conn.closed:
-            self._conn.close()
+        if self._closed:
+            return
+        self._closed = True
+        if self._is_pooled and self._pool is not None:
+            try:
+                if not self._conn.closed:
+                    # Clean up transaction state before returning connection to pool
+                    self._conn.rollback()
+                self._pool.putconn(self._conn)
+            except Exception:
+                try:
+                    self._pool.putconn(self._conn, close=True)
+                except Exception:
+                    pass
+        else:
+            if not self._conn.closed:
+                self._conn.close()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is not None:
-            self.rollback()
-        else:
-            self.commit()
-        self.close()
+        try:
+            if exc_type is not None:
+                self.rollback()
+            else:
+                self.commit()
+        finally:
+            self.close()
 
 
 def get_db_connection():
     """
     Returns a database connection wrapper.
-    If PostgreSQL is configured (DATABASE_URL), connects to PostgreSQL via psycopg2.
+    If PostgreSQL is configured (DATABASE_URL), borrows a connection from the ThreadedConnectionPool.
     Otherwise, connects to local SQLite database with foreign keys enabled.
     Both wrappers provide dict-like row access, commit/rollback, and identical cursor semantics.
     """
     if is_postgres_backend():
+        try:
+            pg_pool = _get_pg_pool()
+            if pg_pool is not None:
+                return PostgresConnectionWrapper(pool=pg_pool)
+        except Exception as e:
+            print(f"[DB Pool Notice]: Fallback to direct Postgres connection: {e}")
         db_url = get_database_url()
-        return PostgresConnectionWrapper(db_url)
+        return PostgresConnectionWrapper(dsn=db_url)
     else:
         db_path = get_db_path()
         return SQLiteConnectionWrapper(db_path)
+
 
 
 def _now_iso():
@@ -454,9 +564,8 @@ def init_db(app=None):
     if is_postgres_backend():
         with get_db_connection() as conn:
             cursor = conn.cursor()
-
-            # 1. Users table
             cursor.execute("""
+                -- 1. Users table
                 CREATE TABLE IF NOT EXISTS users (
                     id SERIAL PRIMARY KEY,
                     username TEXT UNIQUE NOT NULL,
@@ -467,12 +576,10 @@ def init_db(app=None):
                     last_login_at TEXT NULL,
                     is_active INTEGER NOT NULL DEFAULT 1
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);")
+                CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+                CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
-            # 2. Password reset tokens table
-            cursor.execute("""
+                -- 2. Password reset tokens table
                 CREATE TABLE IF NOT EXISTS password_reset_tokens (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -481,12 +588,10 @@ def init_db(app=None):
                     used_at TEXT NULL,
                     created_at TEXT NOT NULL
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_reset_token_hash ON password_reset_tokens(token_hash);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_reset_user_id ON password_reset_tokens(user_id);")
+                CREATE INDEX IF NOT EXISTS idx_reset_token_hash ON password_reset_tokens(token_hash);
+                CREATE INDEX IF NOT EXISTS idx_reset_user_id ON password_reset_tokens(user_id);
 
-            # 3. User API Keys table (encrypted per-user storage)
-            cursor.execute("""
+                -- 3. User API Keys table
                 CREATE TABLE IF NOT EXISTS user_api_keys (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -495,11 +600,9 @@ def init_db(app=None):
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_api_keys_user_id ON user_api_keys(user_id);")
+                CREATE INDEX IF NOT EXISTS idx_user_api_keys_user_id ON user_api_keys(user_id);
 
-            # 4. User Resumes table
-            cursor.execute("""
+                -- 4. User Resumes table
                 CREATE TABLE IF NOT EXISTS user_resumes (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -513,12 +616,10 @@ def init_db(app=None):
                     extracted_data_json TEXT NULL,
                     is_current INTEGER NOT NULL DEFAULT 1
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_resumes_user_id ON user_resumes(user_id);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_resumes_current ON user_resumes(user_id, is_current);")
+                CREATE INDEX IF NOT EXISTS idx_user_resumes_user_id ON user_resumes(user_id);
+                CREATE INDEX IF NOT EXISTS idx_user_resumes_current ON user_resumes(user_id, is_current);
 
-            # 5. User Persistent Sessions / Remember Tokens table
-            cursor.execute("""
+                -- 5. User Persistent Sessions / Remember Tokens table
                 CREATE TABLE IF NOT EXISTS user_sessions (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -529,12 +630,10 @@ def init_db(app=None):
                     user_agent TEXT NULL,
                     ip_address TEXT NULL
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_sessions_token_hash ON user_sessions(token_hash);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);")
+                CREATE INDEX IF NOT EXISTS idx_user_sessions_token_hash ON user_sessions(token_hash);
+                CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 
-            # 6. Saved Jobs table
-            cursor.execute("""
+                -- 6. Saved Jobs table
                 CREATE TABLE IF NOT EXISTS saved_jobs (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -555,12 +654,10 @@ def init_db(app=None):
                     saved_at TEXT NOT NULL,
                     UNIQUE(user_id, job_id)
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_id ON saved_jobs(user_id);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_job ON saved_jobs(user_id, job_id);")
+                CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_id ON saved_jobs(user_id);
+                CREATE INDEX IF NOT EXISTS idx_saved_jobs_user_job ON saved_jobs(user_id, job_id);
 
-            # 7. Applied Jobs table
-            cursor.execute("""
+                -- 7. Applied Jobs table
                 CREATE TABLE IF NOT EXISTS applied_jobs (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -581,12 +678,10 @@ def init_db(app=None):
                     applied_at TEXT NOT NULL,
                     UNIQUE(user_id, job_id)
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_applied_jobs_user_id ON applied_jobs(user_id);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_applied_jobs_user_job ON applied_jobs(user_id, job_id);")
+                CREATE INDEX IF NOT EXISTS idx_applied_jobs_user_id ON applied_jobs(user_id);
+                CREATE INDEX IF NOT EXISTS idx_applied_jobs_user_job ON applied_jobs(user_id, job_id);
 
-            # 8. Job Search Results table
-            cursor.execute("""
+                -- 8. Job Search Results table
                 CREATE TABLE IF NOT EXISTS job_search_results (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -603,13 +698,11 @@ def init_db(app=None):
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_job_search_user_id ON job_search_results(user_id);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_job_search_user_current ON job_search_results(user_id, is_current);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_job_search_search_id ON job_search_results(search_id);")
+                CREATE INDEX IF NOT EXISTS idx_job_search_user_id ON job_search_results(user_id);
+                CREATE INDEX IF NOT EXISTS idx_job_search_user_current ON job_search_results(user_id, is_current);
+                CREATE INDEX IF NOT EXISTS idx_job_search_search_id ON job_search_results(search_id);
 
-            # 9. API Key History table
-            cursor.execute("""
+                -- 9. API Key History table
                 CREATE TABLE IF NOT EXISTS api_key_history (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -630,14 +723,12 @@ def init_db(app=None):
                     is_current INTEGER NOT NULL DEFAULT 1,
                     details_json TEXT NULL
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_key_hist_user ON api_key_history(user_id);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_key_hist_user_svc ON api_key_history(user_id, service);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_key_hist_user_curr ON api_key_history(user_id, service, is_current);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_key_hist_fp ON api_key_history(key_fingerprint);")
+                CREATE INDEX IF NOT EXISTS idx_api_key_hist_user ON api_key_history(user_id);
+                CREATE INDEX IF NOT EXISTS idx_api_key_hist_user_svc ON api_key_history(user_id, service);
+                CREATE INDEX IF NOT EXISTS idx_api_key_hist_user_curr ON api_key_history(user_id, service, is_current);
+                CREATE INDEX IF NOT EXISTS idx_api_key_hist_fp ON api_key_history(key_fingerprint);
 
-            # 10. API Usage Logs table
-            cursor.execute("""
+                -- 10. API Usage Logs table
                 CREATE TABLE IF NOT EXISTS api_usage_logs (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -654,14 +745,12 @@ def init_db(app=None):
                     total_tokens INTEGER NULL,
                     retry_after_seconds INTEGER NULL
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_usage_user ON api_usage_logs(user_id);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_usage_user_svc ON api_usage_logs(user_id, service);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_usage_user_time ON api_usage_logs(user_id, timestamp);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_api_usage_fp ON api_usage_logs(key_fingerprint);")
+                CREATE INDEX IF NOT EXISTS idx_api_usage_user ON api_usage_logs(user_id);
+                CREATE INDEX IF NOT EXISTS idx_api_usage_user_svc ON api_usage_logs(user_id, service);
+                CREATE INDEX IF NOT EXISTS idx_api_usage_user_time ON api_usage_logs(user_id, timestamp);
+                CREATE INDEX IF NOT EXISTS idx_api_usage_fp ON api_usage_logs(key_fingerprint);
 
-            # 11. User Search Cooldown table
-            cursor.execute("""
+                -- 11. User Search Cooldown table
                 CREATE TABLE IF NOT EXISTS user_search_cooldown (
                     user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
                     last_search_started_at TEXT NULL,
@@ -669,11 +758,9 @@ def init_db(app=None):
                     search_in_progress INTEGER NOT NULL DEFAULT 0,
                     search_started_timestamp DOUBLE PRECISION NULL
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_search_cooldown_user ON user_search_cooldown(user_id);")
+                CREATE INDEX IF NOT EXISTS idx_search_cooldown_user ON user_search_cooldown(user_id);
 
-            # 12. ATS Analyses table
-            cursor.execute("""
+                -- 12. ATS Analyses table
                 CREATE TABLE IF NOT EXISTS ats_analyses (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -707,12 +794,10 @@ def init_db(app=None):
                     analysis_json TEXT NULL,
                     is_current INTEGER NOT NULL DEFAULT 1
                 );
-            """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_ats_analyses_user_id ON ats_analyses(user_id);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_ats_analyses_user_curr ON ats_analyses(user_id, is_current);")
+                CREATE INDEX IF NOT EXISTS idx_ats_analyses_user_id ON ats_analyses(user_id);
+                CREATE INDEX IF NOT EXISTS idx_ats_analyses_user_curr ON ats_analyses(user_id, is_current);
 
-            # 13. Course Topic Progress table
-            cursor.execute("""
+                -- 13. Course Topic Progress table
                 CREATE TABLE IF NOT EXISTS course_topic_progress (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -725,10 +810,9 @@ def init_db(app=None):
                     updated_at TEXT NOT NULL,
                     UNIQUE(user_id, course_id, topic_id)
                 );
+                CREATE INDEX IF NOT EXISTS idx_course_progress_user_course ON course_topic_progress(user_id, course_id);
+                CREATE INDEX IF NOT EXISTS idx_course_progress_lookup ON course_topic_progress(user_id, course_id, topic_id);
             """)
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_course_progress_user_course ON course_topic_progress(user_id, course_id);")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_course_progress_lookup ON course_topic_progress(user_id, course_id, topic_id);")
-
             conn.commit()
             return
 

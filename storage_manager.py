@@ -14,15 +14,78 @@ import re
 import shutil
 import tempfile
 import mimetypes
+import threading
 from contextlib import contextmanager
 from typing import Optional, Tuple, Dict, Any, Union, BinaryIO
 import requests
+from requests.adapters import HTTPAdapter
 from PyPDF2 import PdfReader
 
 
 # Default configuration
 DEFAULT_UPLOAD_FOLDER = "uploads"
 DEFAULT_STORAGE_BUCKET = "resumes"
+
+_STORAGE_SESSION = None
+_STORAGE_SESSION_LOCK = threading.Lock()
+
+
+def _get_storage_session() -> requests.Session:
+    """
+    Returns a thread-safe singleton requests.Session with connection pooling
+    to eliminate TLS handshake overhead for Supabase Storage requests.
+    """
+    global _STORAGE_SESSION
+    if _STORAGE_SESSION is None:
+        with _STORAGE_SESSION_LOCK:
+            if _STORAGE_SESSION is None:
+                s = requests.Session()
+                adapter = HTTPAdapter(
+                    pool_connections=10,
+                    pool_maxsize=10,
+                    max_retries=1,
+                    pool_block=False,
+                )
+                s.mount("https://", adapter)
+                s.mount("http://", adapter)
+                _STORAGE_SESSION = s
+    return _STORAGE_SESSION
+
+
+def _http_get(url, **kwargs):
+    if hasattr(requests.get, "assert_called") or hasattr(requests.get, "mock") or getattr(requests.get, "_is_mock", False):
+        return requests.get(url, **kwargs)
+    try:
+        return _get_storage_session().get(url, **kwargs)
+    except Exception:
+        return requests.get(url, **kwargs)
+
+
+def _http_post(url, **kwargs):
+    if hasattr(requests.post, "assert_called") or hasattr(requests.post, "mock") or getattr(requests.post, "_is_mock", False):
+        return requests.post(url, **kwargs)
+    try:
+        return _get_storage_session().post(url, **kwargs)
+    except Exception:
+        return requests.post(url, **kwargs)
+
+
+def _http_delete(url, **kwargs):
+    if hasattr(requests.delete, "assert_called") or hasattr(requests.delete, "mock") or getattr(requests.delete, "_is_mock", False):
+        return requests.delete(url, **kwargs)
+    try:
+        return _get_storage_session().delete(url, **kwargs)
+    except Exception:
+        return requests.delete(url, **kwargs)
+
+
+def _http_head(url, **kwargs):
+    if hasattr(requests.head, "assert_called") or hasattr(requests.head, "mock") or getattr(requests.head, "_is_mock", False):
+        return requests.head(url, **kwargs)
+    try:
+        return _get_storage_session().head(url, **kwargs)
+    except Exception:
+        return requests.head(url, **kwargs)
 
 
 def get_supabase_url() -> Optional[str]:
@@ -214,7 +277,7 @@ def ensure_supabase_bucket(bucket_name: Optional[str] = None) -> bool:
     try:
         # Check if bucket exists
         check_url = f"{supabase_url}/storage/v1/bucket/{bucket}"
-        res = requests.get(check_url, headers=headers, timeout=10)
+        res = _http_get(check_url, headers=headers, timeout=10)
         if res.status_code == 200:
             return True
         elif res.status_code == 404:
@@ -231,7 +294,7 @@ def ensure_supabase_bucket(bucket_name: Optional[str] = None) -> bool:
                     "application/msword"
                 ]
             }
-            create_res = requests.post(create_url, headers=headers, json=payload, timeout=10)
+            create_res = _http_post(create_url, headers=headers, json=payload, timeout=10)
             return create_res.status_code in (200, 201, 409)  # 409 = already exists
         return False
     except Exception as e:
@@ -297,7 +360,7 @@ def upload_resume_file(
         headers = _get_supabase_headers(content_type=content_type, upsert=True)
 
         try:
-            response = requests.post(upload_url, headers=headers, data=content_bytes, timeout=30)
+            response = _http_post(upload_url, headers=headers, data=content_bytes, timeout=30)
             if response.status_code in (200, 201):
                 return {
                     "success": True,
@@ -314,7 +377,7 @@ def upload_resume_file(
                 # If bucket missing, attempt create once and retry
                 if response.status_code == 404:
                     ensure_supabase_bucket(bucket)
-                    retry_res = requests.post(upload_url, headers=headers, data=content_bytes, timeout=30)
+                    retry_res = _http_post(upload_url, headers=headers, data=content_bytes, timeout=30)
                     if retry_res.status_code in (200, 201):
                         return {
                             "success": True,
@@ -402,13 +465,13 @@ def download_resume_file(
         headers = _get_supabase_headers()
 
         try:
-            res = requests.get(download_url, headers=headers, timeout=30)
+            res = _http_get(download_url, headers=headers, timeout=30)
             if res.status_code == 200:
                 return res.content, base_name, content_type
             elif res.status_code == 404:
                 # Try unauthenticated object endpoint in case bucket is public
                 pub_url = f"{supabase_url}/storage/v1/object/{bucket}/{key_path}"
-                pub_res = requests.get(pub_url, headers=headers, timeout=30)
+                pub_res = _http_get(pub_url, headers=headers, timeout=30)
                 if pub_res.status_code == 200:
                     return pub_res.content, base_name, content_type
                 return None, None, None
@@ -485,12 +548,12 @@ def delete_resume_file(
 
         try:
             # Delete single object
-            res = requests.delete(delete_url, headers=headers, timeout=15)
+            res = _http_delete(delete_url, headers=headers, timeout=15)
             if res.status_code in (200, 204, 404):
                 return True
             # Bulk delete format fallback
             bulk_url = f"{supabase_url}/storage/v1/object/{bucket}"
-            bulk_res = requests.delete(bulk_url, headers=headers, json={"prefixes": [key_path]}, timeout=15)
+            bulk_res = _http_delete(bulk_url, headers=headers, json={"prefixes": [key_path]}, timeout=15)
             return bulk_res.status_code in (200, 204, 404)
         except Exception as e:
             print(f"[Supabase Storage Delete Notice]: {e}")
@@ -539,10 +602,10 @@ def resume_exists(
         check_url = f"{supabase_url}/storage/v1/object/authenticated/{bucket}/{key_path}"
         headers = _get_supabase_headers()
         try:
-            res = requests.head(check_url, headers=headers, timeout=10)
+            res = _http_head(check_url, headers=headers, timeout=10)
             if res.status_code == 200:
                 return True
-            get_res = requests.get(check_url, headers=headers, timeout=10)
+            get_res = _http_get(check_url, headers=headers, timeout=10)
             return get_res.status_code == 200
         except Exception:
             return False

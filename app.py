@@ -1,5 +1,6 @@
 import os
 import io
+import time
 import shutil
 import tempfile
 import concurrent.futures
@@ -169,6 +170,9 @@ app.config["SESSION_COOKIE_SECURE"] = (
     os.environ.get("SESSION_COOKIE_SECURE", "False").lower() in ("true", "1")
 )
 
+# Static asset caching configuration (7 days browser cache for static files)
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 604800
+
 # Enable CSRF Protection
 csrf = CSRFProtect(app)
 
@@ -224,6 +228,36 @@ def mask_bullets_filter(val):
     return str(val).replace("*", "•")
 
 
+# --- PERFORMANCE & CACHING MIDDLEWARE ---
+
+@app.before_request
+def start_performance_timer():
+    """Records high-resolution request start time for lightweight performance monitoring."""
+    request._start_time = time.time()
+
+
+@app.after_request
+def add_performance_and_cache_headers(response):
+    """
+    Applies production-safe browser caching headers to static assets and logs request duration.
+    Never exposes internal tokens or secrets.
+    """
+    # Safe static asset cache headers (7 days for images/fonts, 1 day with stale-while-revalidate for CSS/JS)
+    if request.path.startswith("/static/"):
+        if any(request.path.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico", ".woff2", ".woff", ".ttf"]):
+            response.headers["Cache-Control"] = "public, max-age=604800, immutable"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=86400"
+
+    # Lightweight performance timing
+    start_t = getattr(request, "_start_time", None)
+    if start_t is not None:
+        duration_ms = (time.time() - start_t) * 1000
+        # Only log slow requests (>1000ms) or API/action routes to prevent log noise
+        if duration_ms > 1000 or request.path.startswith("/api/") or request.method == "POST":
+            print(f"[PERF] {request.method} {request.path} total={duration_ms:.1f}ms status={response.status_code}")
+
+    return response
 
 
 # --- USER DATA & AUTHENTICATION HELPERS ---
@@ -1845,49 +1879,42 @@ def api_get_course_progress(course_id):
 @login_required
 def profile_route():
     """
-    Renders the main authenticated Profile page.
-    Displays user account info, masked API keys, SerpAPI usage & limits,
+    Renders the main authenticated Profile page instantly.
+    Displays user account info, masked API keys, SerpAPI usage & limits from DB history,
     Gemini usage & status, key history, resume management, contact info, and bottom nav.
+    Non-blocking: Live SerpAPI account updates are refreshed asynchronously via /api/serpapi-usage.
     """
     user_id = session.get("user_id")
     user = get_current_user()
     user_keys = get_user_api_keys(user_id, decrypted=True)
     user_resume = get_user_resume(user_id, current_only=True)
 
-    # 1. Fetch SerpAPI Account Data if key is present
-    serpapi_account = None
-    if user_keys.get("has_serpapi") and user_keys.get("serpapi_key"):
-        serpapi_account = fetch_serpapi_account_info(user_keys["serpapi_key"])
-        # Update key history with freshest metrics
-        key_fp = user_keys.get("serpapi_fingerprint")
-        if key_fp:
-            update_key_history_status(
-                user_id=user_id,
-                service="serpapi",
-                key_fingerprint=key_fp,
-                status=serpapi_account.get("status_display", "ACTIVE"),
-                plan_name=serpapi_account.get("plan_name"),
-                renewal_date=serpapi_account.get("plan_renewal_date"),
-                last_known_usage=serpapi_account.get("this_month_usage"),
-                last_known_limit=serpapi_account.get("searches_per_month"),
-                last_known_hourly_usage=serpapi_account.get("this_hour_searches"),
-                last_known_hourly_limit=serpapi_account.get("account_rate_limit_per_hour"),
-                remaining_searches=(
-                    serpapi_account.get("plan_searches_left")
-                    if serpapi_account.get("plan_searches_left") is not None
-                    else serpapi_account.get("total_searches_left")
-                ),
-            )
+    # 1. Fetch API Key History from DB
+    api_key_history = get_api_key_history(user_id)
 
-    # 2. Fetch Gemini Usage Summary
+    # 2. Extract persisted SerpAPI Account Data from DB history (non-blocking)
+    serpapi_account = None
+    if user_keys.get("has_serpapi"):
+        serp_entry = next((h for h in api_key_history if h.get("service") == "serpapi" and h.get("is_current")), None)
+        if serp_entry:
+            serpapi_account = {
+                "status_display": serp_entry.get("status", "ACTIVE"),
+                "plan_name": serp_entry.get("plan_name"),
+                "plan_renewal_date": serp_entry.get("renewal_date"),
+                "this_month_usage": serp_entry.get("last_known_usage"),
+                "searches_per_month": serp_entry.get("last_known_limit"),
+                "this_hour_searches": serp_entry.get("last_known_hourly_usage"),
+                "account_rate_limit_per_hour": serp_entry.get("last_known_hourly_limit"),
+                "plan_searches_left": serp_entry.get("remaining_searches"),
+                "total_searches_left": serp_entry.get("remaining_searches"),
+            }
+
+    # 3. Fetch Gemini Usage Summary
     gemini_usage = get_gemini_usage_summary(
         user_id=user_id,
         key_fingerprint=user_keys.get("gemini_fingerprint"),
         configured_model=DEFAULT_GEMINI_MODEL,
     )
-
-    # 3. Fetch API Key History
-    api_key_history = get_api_key_history(user_id)
 
     return render_template(
         "profile.html",

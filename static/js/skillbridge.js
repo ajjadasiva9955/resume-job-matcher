@@ -230,6 +230,39 @@
         };
     }
 
+    async function safeApiFetch(url, options = {}, retries = 1, timeoutMs = 25000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const fetchOptions = { ...options, signal: controller.signal };
+
+        try {
+            const res = await fetch(url, fetchOptions);
+            clearTimeout(timer);
+            if (!res.ok && res.status >= 500 && retries > 0) {
+                await new Promise((r) => setTimeout(r, 1000));
+                return safeApiFetch(url, options, retries - 1, timeoutMs);
+            }
+            return res;
+        } catch (err) {
+            clearTimeout(timer);
+            if (retries > 0 && err.name !== "AbortError") {
+                await new Promise((r) => setTimeout(r, 1000));
+                return safeApiFetch(url, options, retries - 1, timeoutMs);
+            }
+            throw err;
+        }
+    }
+
+    function getNetworkErrorMessage(err) {
+        if (typeof navigator !== "undefined" && navigator.onLine === false) {
+            return "You appear to be offline. Please check your internet connection.";
+        }
+        if (err && err.name === "AbortError") {
+            return "Request timed out. The server is taking longer than usual to respond. Please try again.";
+        }
+        return "Unable to communicate with server. Please try again in a moment.";
+    }
+
     window.toggleSaveJob = async function toggleSaveJob(button) {
         if (!button || button.disabled) return;
         const payload = extractJobPayload(button);
@@ -246,7 +279,7 @@
 
         button.disabled = true;
         try {
-            const res = await fetch(endpoint, {
+            const res = await safeApiFetch(endpoint, {
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify(payload)
@@ -284,7 +317,7 @@
             }
         } catch (err) {
             console.error("Save job network error:", err);
-            alert("Network error: Unable to communicate with server. Please try again.");
+            alert(getNetworkErrorMessage(err));
         } finally {
             button.disabled = false;
         }
@@ -306,7 +339,7 @@
 
         button.disabled = true;
         try {
-            const res = await fetch(endpoint, {
+            const res = await safeApiFetch(endpoint, {
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify(payload)
@@ -340,7 +373,7 @@
             }
         } catch (err) {
             console.error("Apply job network error:", err);
-            alert("Network error: Unable to communicate with server. Please try again.");
+            alert(getNetworkErrorMessage(err));
         } finally {
             button.disabled = false;
         }
@@ -354,7 +387,7 @@
 
         if (button) button.disabled = true;
         try {
-            const res = await fetch("/remove-saved-job", {
+            const res = await safeApiFetch("/remove-saved-job", {
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify({ job_id: jobId })
@@ -378,7 +411,7 @@
             }
         } catch (err) {
             console.error("Remove saved job error:", err);
-            alert("Network error: Unable to remove saved job.");
+            alert(getNetworkErrorMessage(err));
             if (button) button.disabled = false;
         }
     };
@@ -391,7 +424,7 @@
 
         if (button) button.disabled = true;
         try {
-            const res = await fetch("/mark-not-applied", {
+            const res = await safeApiFetch("/mark-not-applied", {
                 method: "POST",
                 headers: headers,
                 body: JSON.stringify({ job_id: jobId })
@@ -415,7 +448,7 @@
             }
         } catch (err) {
             console.error("Mark not applied error:", err);
-            alert("Network error: Unable to update application status.");
+            alert(getNetworkErrorMessage(err));
             if (button) button.disabled = false;
         }
     };

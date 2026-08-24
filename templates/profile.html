@@ -313,18 +313,18 @@
                                     <span class="api-service-dot dot-serp"></span>
                                     <h4 class="api-card-title">SerpAPI Usage &amp; Limits</h4>
                                 </div>
-                                <span class="api-badge-status {% if serpapi_account and serpapi_account.status_display == 'ACTIVE' %}badge-ok{% elif serpapi_account and serpapi_account.status_display == 'LIMITED' %}badge-warn{% else %}badge-neutral{% endif %}">
+                                <span id="serp-badge-status" class="api-badge-status {% if serpapi_account and serpapi_account.status_display == 'ACTIVE' %}badge-ok{% elif serpapi_account and serpapi_account.status_display == 'LIMITED' %}badge-warn{% else %}badge-neutral{% endif %}">
                                     {{ serpapi_account.status_display if (serpapi_account and serpapi_account.status_display) else 'UNCONFIGURED' }}
                                 </span>
                             </div>
                             <div class="api-card-body">
                                 <div class="api-stat-row">
                                     <span class="api-stat-label">Plan Name</span>
-                                    <span class="api-stat-value">{{ serpapi_account.plan_name if (serpapi_account and serpapi_account.plan_name) else 'Not available' }}</span>
+                                    <span id="serp-plan-name" class="api-stat-value">{{ serpapi_account.plan_name if (serpapi_account and serpapi_account.plan_name) else 'Not available' }}</span>
                                 </div>
                                 <div class="api-stat-row">
                                     <span class="api-stat-label">Monthly Searches</span>
-                                    <span class="api-stat-value">
+                                    <span id="serp-monthly-searches" class="api-stat-value">
                                         {% if serpapi_account and serpapi_account.this_month_usage is not none and serpapi_account.searches_per_month is not none %}
                                             {{ serpapi_account.this_month_usage }} / {{ serpapi_account.searches_per_month }}
                                         {% elif serpapi_account and serpapi_account.this_month_usage is not none %}
@@ -336,7 +336,7 @@
                                 </div>
                                 <div class="api-stat-row">
                                     <span class="api-stat-label">Remaining Searches</span>
-                                    <span class="api-stat-value">
+                                    <span id="serp-remaining-searches" class="api-stat-value">
                                         {% if serpapi_account and (serpapi_account.plan_searches_left is not none or serpapi_account.total_searches_left is not none) %}
                                             {{ serpapi_account.plan_searches_left if serpapi_account.plan_searches_left is not none else serpapi_account.total_searches_left }} left
                                         {% else %}
@@ -346,7 +346,7 @@
                                 </div>
                                 <div class="api-stat-row">
                                     <span class="api-stat-label">Hourly Usage</span>
-                                    <span class="api-stat-value">
+                                    <span id="serp-hourly-usage" class="api-stat-value">
                                         {% if serpapi_account and serpapi_account.this_hour_searches is not none and serpapi_account.account_rate_limit_per_hour is not none %}
                                             {{ serpapi_account.this_hour_searches }} / {{ serpapi_account.account_rate_limit_per_hour }}
                                         {% elif serpapi_account and serpapi_account.this_hour_searches is not none %}
@@ -358,7 +358,7 @@
                                 </div>
                                 <div class="api-stat-row">
                                     <span class="api-stat-label">Next Renewal</span>
-                                    <span class="api-stat-value">{{ serpapi_account.plan_renewal_date if (serpapi_account and serpapi_account.plan_renewal_date) else 'Not available' }}</span>
+                                    <span id="serp-next-renewal" class="api-stat-value">{{ serpapi_account.plan_renewal_date if (serpapi_account and serpapi_account.plan_renewal_date) else 'Not available' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -763,6 +763,47 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }
+
+    {% if keys and keys.has_serpapi %}
+    // Asynchronous background refresh for SerpAPI metrics (non-blocking)
+    fetch("/api/serpapi-usage")
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.success && data.account) {
+                var acc = data.account;
+                var planEl = document.getElementById("serp-plan-name");
+                if (planEl && acc.plan_name) planEl.textContent = acc.plan_name;
+                
+                var monthEl = document.getElementById("serp-monthly-searches");
+                if (monthEl && acc.this_month_usage !== null && acc.searches_per_month !== null) {
+                    monthEl.textContent = acc.this_month_usage + " / " + acc.searches_per_month;
+                }
+                
+                var remEl = document.getElementById("serp-remaining-searches");
+                if (remEl && (acc.plan_searches_left !== null || acc.total_searches_left !== null)) {
+                    var left = acc.plan_searches_left !== null ? acc.plan_searches_left : acc.total_searches_left;
+                    remEl.textContent = left + " left";
+                }
+                
+                var hourEl = document.getElementById("serp-hourly-usage");
+                if (hourEl && acc.this_hour_searches !== null && acc.account_rate_limit_per_hour !== null) {
+                    hourEl.textContent = acc.this_hour_searches + " / " + acc.account_rate_limit_per_hour;
+                }
+                
+                var renEl = document.getElementById("serp-next-renewal");
+                if (renEl && acc.plan_renewal_date) renEl.textContent = acc.plan_renewal_date;
+
+                var badgeEl = document.getElementById("serp-badge-status");
+                if (badgeEl && acc.status_display) {
+                    badgeEl.textContent = acc.status_display;
+                    badgeEl.className = "api-badge-status " + (acc.status_display === "ACTIVE" ? "badge-ok" : (acc.status_display === "LIMITED" ? "badge-warn" : "badge-neutral"));
+                }
+            }
+        })
+        .catch(function(err) {
+            console.debug("SerpAPI background sync notice:", err);
+        });
+    {% endif %}
 });
 </script>
 {% include "partials/ai_chatbot.html" %}
