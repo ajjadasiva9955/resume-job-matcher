@@ -489,15 +489,17 @@ def forgot_password_route():
                 result = send_password_reset_email(user["email"], user["username"], raw_token)
                 
                 status = result.get("status")
+                provider = result.get("provider")
                 smtp_status = status
                 if status == "SENT":
-                    flash("A password reset email has been sent to your inbox via Gmail.", "success")
+                    flash("A password reset email has been sent to your inbox.", "success")
                 elif status in ("NO_PASSWORD", "AUTH_ERROR", "CONNECT_ERROR"):
-                    dev_reset_url = result.get("reset_url")
-                    if status == "AUTH_ERROR":
-                        flash("Gmail SMTP authentication failed. Please verify the Gmail App Password in .env.", "error")
-                    elif status == "CONNECT_ERROR":
-                        flash("Could not connect to Gmail SMTP server. Please check your network connection.", "error")
+                    if provider == "smtp" or not provider:
+                        dev_reset_url = result.get("reset_url")
+                        if status == "AUTH_ERROR":
+                            flash("Gmail SMTP authentication failed. Please verify the Gmail App Password in .env.", "error")
+                        elif status == "CONNECT_ERROR":
+                            flash("Could not connect to Gmail SMTP server. Please check your network connection.", "error")
 
         return render_template("forgot_password.html", email="", dev_reset_url=dev_reset_url, smtp_status=smtp_status)
 

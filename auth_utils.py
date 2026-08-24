@@ -4,6 +4,7 @@ import time
 import secrets
 import hashlib
 import smtplib
+import requests
 from email.message import EmailMessage
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse, urljoin
@@ -34,9 +35,9 @@ def get_smtp_config():
     port_val = (os.getenv("MAIL_PORT") or "587").strip()
     port = int(port_val) if port_val.isdigit() else 587
     use_tls = (os.getenv("MAIL_USE_TLS") or "True").strip().lower() in ("true", "1", "yes")
-    username = (os.getenv("MAIL_USERNAME") or "ajjadasiva9955@gmail.com").strip()
+    username = (os.getenv("MAIL_USERNAME") or "skillbridge9955@gmail.com").strip()
     password = (os.getenv("MAIL_PASSWORD") or "").strip()
-    mail_from = (os.getenv("MAIL_FROM") or username or "ajjadasiva9955@gmail.com").strip()
+    mail_from = (os.getenv("MAIL_FROM") or username or "skillbridge9955@gmail.com").strip()
 
     is_configured = bool(server and username and password)
 
@@ -48,6 +49,38 @@ def get_smtp_config():
         "password": password,
         "from": mail_from,
         "is_configured": is_configured,
+    }
+
+
+def get_brevo_config():
+    """
+    Safely reads Brevo API configuration from environment variables.
+    Reads BREVO_API_KEY only from the environment.
+    Never hardcodes or logs the API key.
+    """
+    load_dotenv(dotenv_path=ENV_PATH, override=True)
+    api_key = (os.getenv("BREVO_API_KEY") or "").strip()
+    provider = (os.getenv("EMAIL_PROVIDER") or "").strip().lower()
+    sender_email = (
+        os.getenv("BREVO_SENDER_EMAIL")
+        or os.getenv("MAIL_FROM")
+        or os.getenv("MAIL_USERNAME")
+        or "skillbridge9955@gmail.com"
+    ).strip()
+    sender_name = (os.getenv("BREVO_SENDER_NAME") or "SkillBridge.AI").strip()
+    api_url = (os.getenv("BREVO_API_URL") or "https://api.brevo.com/v3/smtp/email").strip()
+
+    is_configured = bool(api_key)
+    is_active = (provider == "brevo") or (is_configured and provider != "smtp")
+
+    return {
+        "api_key": api_key,
+        "provider": provider,
+        "sender_email": sender_email,
+        "sender_name": sender_name,
+        "api_url": api_url,
+        "is_configured": is_configured,
+        "is_active": is_active,
     }
 
 
@@ -182,39 +215,93 @@ def is_safe_url(target):
     return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 
 
+def send_email_via_brevo(to_email, username, reset_url, text_content, html_content):
+    """
+    Sends transactional email via Brevo HTTPS API (POST https://api.brevo.com/v3/smtp/email).
+    Does NOT use SMTP. Protects API keys and sensitive tokens from logs.
+    """
+    cfg = get_brevo_config()
+    if not cfg["is_configured"]:
+        print("[AUTH ERROR] Brevo API key is not configured in environment.")
+        return {
+            "success": False,
+            "status": "NO_API_KEY",
+            "reset_url": reset_url,
+            "error": "Brevo API key not configured",
+        }
+
+    headers = {
+        "accept": "application/json",
+        "api-key": cfg["api_key"],
+        "content-type": "application/json",
+    }
+
+    payload = {
+        "sender": {
+            "name": cfg["sender_name"],
+            "email": cfg["sender_email"],
+        },
+        "to": [
+            {
+                "email": to_email,
+                "name": username or to_email,
+            }
+        ],
+        "subject": "Reset your SkillBridge.AI password",
+        "htmlContent": html_content,
+        "textContent": text_content,
+    }
+
+    try:
+        response = requests.post(cfg["api_url"], json=payload, headers=headers, timeout=15)
+        if response.status_code in (200, 201, 202):
+            print(f"[AUTH SUCCESS] Password reset email successfully dispatched to {to_email} via Brevo HTTPS API.")
+            return {
+                "success": True,
+                "status": "SENT",
+                "reset_url": reset_url,
+                "provider": "brevo",
+            }
+        else:
+            print(f"[AUTH ERROR] Brevo HTTPS API returned HTTP status {response.status_code}")
+            return {
+                "success": False,
+                "status": "BREVO_ERROR",
+                "reset_url": reset_url,
+                "error": f"Brevo API error status {response.status_code}",
+            }
+    except requests.RequestException as e:
+        print(f"[AUTH ERROR] Brevo HTTPS API request failed: {type(e).__name__}")
+        return {
+            "success": False,
+            "status": "BREVO_ERROR",
+            "reset_url": reset_url,
+            "error": str(e),
+        }
+    except Exception as e:
+        print(f"[AUTH ERROR] Unexpected error during Brevo HTTPS email delivery: {type(e).__name__}")
+        return {
+            "success": False,
+            "status": "BREVO_ERROR",
+            "reset_url": reset_url,
+            "error": str(e),
+        }
+
+
 def send_password_reset_email(to_email, username, reset_token):
     """
-    Dispatches a password reset email using Python's smtplib and EmailMessage
-    through the developer's Gmail account (ajjadasiva9955@gmail.com).
+    Dispatches a password reset email using:
+    1. Brevo HTTPS Transactional Email API if EMAIL_PROVIDER=brevo (or BREVO_API_KEY is configured)
+    2. Local Gmail SMTP (smtplib) as a fallback for local development if configured
 
     Returns a dict:
     - success: bool
-    - status: 'SENT' | 'NO_PASSWORD' | 'AUTH_ERROR' | 'CONNECT_ERROR'
+    - status: 'SENT' | 'NO_PASSWORD' | 'AUTH_ERROR' | 'CONNECT_ERROR' | 'NO_API_KEY' | 'BREVO_ERROR'
     - reset_url: str
+    - provider: 'brevo' | 'smtp' (optional)
     - error: optional error message for developer diagnostic
     """
-    cfg = get_smtp_config()
     reset_url = url_for("reset_password_route", token=reset_token, _external=True)
-
-    # 1. Check if Gmail App Password is set in .env
-    if not cfg["is_configured"]:
-        print(f"\n[AUTH DIAGNOSTIC] Password reset requested for {to_email}")
-        print(f"[AUTH DIAGNOSTIC] SMTP status: MAIL_PASSWORD is not set in .env")
-        print(f"[AUTH DIAGNOSTIC] Development Reset Link: {reset_url}")
-        print(f"[AUTH DIAGNOSTIC] To enable real email sending from {cfg['username']}:")
-        print(f"                  Set MAIL_PASSWORD=<16-char Gmail App Password> in {ENV_PATH}\n")
-        return {
-            "success": False,
-            "status": "NO_PASSWORD",
-            "reset_url": reset_url,
-            "error": "Gmail App Password not set in .env",
-        }
-
-    # 2. Build email message
-    msg = EmailMessage()
-    msg["Subject"] = "Reset your SkillBridge.AI password"
-    msg["From"] = cfg["from"]
-    msg["To"] = to_email
 
     # Plain text version
     text_content = f"""Hello {username},
@@ -262,22 +349,49 @@ SkillBridge.AI Team
 </body>
 </html>
 """
+
+    provider = (os.getenv("EMAIL_PROVIDER") or "").strip().lower()
+    brevo_cfg = get_brevo_config()
+
+    # 1. Primary: Brevo HTTPS API
+    if provider == "brevo" or (brevo_cfg["is_configured"] and provider != "smtp"):
+        return send_email_via_brevo(to_email, username, reset_url, text_content, html_content)
+
+    # 2. Local Fallback: Gmail SMTP
+    cfg = get_smtp_config()
+    if not cfg["is_configured"]:
+        print(f"\n[AUTH DIAGNOSTIC] Password reset requested for {to_email}")
+        print(f"[AUTH DIAGNOSTIC] SMTP status: MAIL_PASSWORD is not set in .env")
+        print(f"[AUTH DIAGNOSTIC] Development Reset Link: {reset_url}")
+        print(f"[AUTH DIAGNOSTIC] To enable real email sending from {cfg['username']}:")
+        print(f"                  Set MAIL_PASSWORD=<16-char Gmail App Password> in {ENV_PATH}\n")
+        return {
+            "success": False,
+            "status": "NO_PASSWORD",
+            "reset_url": reset_url,
+            "error": "Gmail App Password not set in .env",
+        }
+
+    msg = EmailMessage()
+    msg["Subject"] = "Reset your SkillBridge.AI password"
+    msg["From"] = cfg["from"]
+    msg["To"] = to_email
     msg.set_content(text_content)
     msg.add_alternative(html_content, subtype="html")
 
-    # 3. Attempt SMTP connection and email delivery
     try:
         with smtplib.SMTP(cfg["server"], cfg["port"], timeout=12) as server:
             if cfg["use_tls"]:
                 server.starttls()
             server.login(cfg["username"], cfg["password"])
             server.send_message(msg)
-        
+
         print(f"[AUTH SUCCESS] Password reset email successfully sent to {to_email} via {cfg['username']}")
         return {
             "success": True,
             "status": "SENT",
             "reset_url": reset_url,
+            "provider": "smtp",
         }
 
     except smtplib.SMTPAuthenticationError as e:
