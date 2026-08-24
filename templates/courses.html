@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge.AI | All Courses</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/skillbridge-icon.png') }}">
+
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (light ? "light" : "dark"));
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chatbot.css') }}">
+</head>
+<body class="courses-page">
+<div class="sky-scene" aria-hidden="true">
+    <span class="moon"></span>
+    <span class="sun"></span>
+    <span class="planet planet-one"></span>
+    <span class="planet planet-two"></span>
+</div>
+<div class="ambient" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
+<div class="app-shell">
+    <!-- 1. TOP NAVBAR -->
+    <header class="navbar" aria-label="Primary navigation">
+        <div class="container">
+            <div class="nav-inner glass-nav">
+                <a class="brand" href="/jobs-home" aria-label="SkillBridge.AI home">
+                    <span class="brand-mark navbar-logo-mark" aria-hidden="true">
+                        <img class="navbar-logo" src="{{ url_for('static', filename='images/skillbridge-icon.png') }}" alt="">
+                    </span>
+                    <span>SkillBridge.AI</span>
+                </a>
+
+                <div class="nav-actions">
+                    <nav class="nav-links" data-nav-links>
+                        <a class="nav-link active" href="/courses" aria-current="page" aria-label="All Courses" title="All Courses">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                            </svg>
+                            <span>All Courses</span>
+                        </a>
+                        <a class="nav-link" href="#contact" aria-label="Contact" title="Contact">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <span>Contact</span>
+                        </a>
+                    </nav>
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-icon sun-label">Sun</span>
+                            <span class="theme-icon moon-label">Moon</span>
+                        </span>
+                    </button>
+                    <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu" aria-expanded="false">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. MAIN CONTENT -->
+    <main class="section courses-main-section" style="padding-top: 20px; padding-bottom: 100px;">
+        <div class="container courses-page-container">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-stack" role="alert" style="margin-bottom: 24px;">
+                        {% for category, message in messages %}
+                            <div class="flash-alert flash-{{ category }}">
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- 3. HERO / WELCOME SECTION -->
+            <section class="glass-panel courses-hero-panel reveal-up" aria-labelledby="coursesHeroHeading">
+                <div class="courses-hero-grid">
+                    <!-- Left Hero Content -->
+                    <div class="courses-hero-left">
+                        <span class="badge section-pill-badge hero-pill-badge">LEARN. BUILD. GROW</span>
+                        <h1 class="courses-hero-title" id="coursesHeroHeading">
+                            Welcome to<br>
+                            <span class="gradient-text">SkillBridge.AI Courses</span>
+                        </h1>
+                        <p class="courses-hero-desc">
+                            Explore industry-relevant courses and build the skills you need to accelerate your career.
+                        </p>
+
+                        <!-- 3 Supporting Feature Items matching reference -->
+                        <div class="courses-hero-features-row" aria-label="Course highlights">
+                            <!-- Feature 1: Expert Instructors -->
+                            <div class="course-hero-feat-item">
+                                <div class="course-feat-icon-circle icon-circle-indigo" aria-hidden="true">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="course-feat-meta">
+                                    <strong class="course-feat-title">Expert Instructors</strong>
+                                    <span class="course-feat-sub">Learn from industry professionals</span>
+                                </div>
+                            </div>
+
+                            <!-- Feature 2: Practical Projects -->
+                            <div class="course-hero-feat-item">
+                                <div class="course-feat-icon-circle icon-circle-purple" aria-hidden="true">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                    </svg>
+                                </div>
+                                <div class="course-feat-meta">
+                                    <strong class="course-feat-title">Practical Projects</strong>
+                                    <span class="course-feat-sub">Build real-world projects and portfolios</span>
+                                </div>
+                            </div>
+
+                            <!-- Feature 3: Certificate -->
+                            <div class="course-hero-feat-item">
+                                <div class="course-feat-icon-circle icon-circle-violet" aria-hidden="true">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="8" r="7"></circle>
+                                        <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="course-feat-meta">
+                                    <strong class="course-feat-title">Certificate</strong>
+                                    <span class="course-feat-sub">Earn certificates and boost your profile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Hero Visual Illustration matching reference -->
+                    <div class="courses-hero-visual-col" aria-hidden="true">
+                        <div class="courses-3d-scene">
+                            <!-- Background glowing orb -->
+                            <div class="courses-scene-glow"></div>
+                            
+                            <!-- Floating Code Snippet Card -->
+                            <div class="floating-badge-code">
+                                <span class="badge-code-sym">&lt;/&gt;</span>
+                            </div>
+
+                            <!-- Floating Video/Curriculum Card -->
+                            <div class="floating-media-card glass-card">
+                                <div class="floating-media-header">
+                                    <span class="media-dot red"></span>
+                                    <span class="media-dot yellow"></span>
+                                    <span class="media-dot green"></span>
+                                </div>
+                                <div class="floating-media-body">
+                                    <div class="media-play-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                            <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                                        </svg>
+                                    </div>
+                                    <div class="media-lines">
+                                        <span class="media-line line-long"></span>
+                                        <span class="media-line line-short"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3D Graduation Cap & Books Stack SVG Composition -->
+                            <div class="courses-cap-stack-wrap">
+                                <svg class="courses-cap-svg" viewBox="0 0 280 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="capGrad" x1="40" y1="20" x2="240" y2="100" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#8b5cf6" />
+                                            <stop offset="0.5" stop-color="#6366f1" />
+                                            <stop offset="1" stop-color="#4f46e5" />
+                                        </linearGradient>
+                                        <linearGradient id="capTopGrad" x1="140" y1="10" x2="140" y2="65" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#a78bfa" />
+                                            <stop offset="1" stop-color="#7c3aed" />
+                                        </linearGradient>
+                                        <linearGradient id="tasselGrad" x1="220" y1="35" x2="250" y2="110" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#c4b5fd" />
+                                            <stop offset="1" stop-color="#8b5cf6" />
+                                        </linearGradient>
+                                        <linearGradient id="bookTopGrad" x1="30" y1="130" x2="250" y2="165" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#6366f1" />
+                                            <stop offset="1" stop-color="#4338ca" />
+                                        </linearGradient>
+                                        <linearGradient id="bookBottomGrad" x1="20" y1="165" x2="260" y2="210" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#8b5cf6" />
+                                            <stop offset="1" stop-color="#6d28d9" />
+                                        </linearGradient>
+                                        <linearGradient id="pageGrad" x1="40" y1="0" x2="240" y2="0" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#ffffff" />
+                                            <stop offset="1" stop-color="#e0e7ff" />
+                                        </linearGradient>
+                                        <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                                            <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#6366f1" flood-opacity="0.35"/>
+                                        </filter>
+                                    </defs>
+
+                                    <!-- Bottom Book -->
+                                    <g filter="url(#glowFilter)">
+                                        <!-- Book Base -->
+                                        <path d="M 25 185 Q 140 170 255 185 L 255 205 Q 140 190 25 205 Z" fill="url(#bookBottomGrad)" />
+                                        <!-- Book Pages -->
+                                        <path d="M 30 178 Q 140 165 250 178 L 250 188 Q 140 175 30 188 Z" fill="url(#pageGrad)" />
+                                        <!-- Book Cover Top -->
+                                        <path d="M 20 174 Q 140 160 260 174 L 260 182 Q 140 168 20 182 Z" fill="#7c3aed" />
+                                        <rect x="25" y="174" width="235" height="4" rx="2" fill="#c4b5fd" opacity="0.6"/>
+                                    </g>
+
+                                    <!-- Middle / Top Book -->
+                                    <g>
+                                        <!-- Top Book Base -->
+                                        <path d="M 40 148 Q 140 135 240 148 L 240 168 Q 140 155 40 168 Z" fill="url(#bookTopGrad)" />
+                                        <!-- Top Book Pages -->
+                                        <path d="M 45 142 Q 140 130 235 142 L 235 150 Q 140 138 45 150 Z" fill="url(#pageGrad)" />
+                                        <!-- Top Book Cover -->
+                                        <path d="M 35 138 Q 140 125 245 138 L 245 144 Q 140 131 35 144 Z" fill="#4f46e5" />
+                                        <rect x="40" y="138" width="205" height="3" rx="1.5" fill="#a5b4fc" opacity="0.7"/>
+                                    </g>
+
+                                    <!-- 3D Graduation Cap -->
+                                    <g transform="translate(15, -15)">
+                                        <!-- Cap Skull Skullcap / Underside -->
+                                        <ellipse cx="125" cy="85" rx="50" ry="22" fill="#312e81" opacity="0.8"/>
+                                        <path d="M 75 85 Q 125 110 175 85 L 175 102 Q 125 125 75 102 Z" fill="#4338ca" />
+                                        
+                                        <!-- Cap Diamond Board -->
+                                        <polygon points="125,28 225,58 125,88 25,58" fill="url(#capTopGrad)" stroke="#c4b5fd" stroke-width="1.5"/>
+                                        <polygon points="125,32 220,60 125,86 30,60" fill="url(#capGrad)" opacity="0.9"/>
+                                        
+                                        <!-- Center Button -->
+                                        <ellipse cx="125" cy="58" rx="6" ry="4" fill="#ddd6fe" />
+
+                                        <!-- Tassel Ribbon & Hanging Ball -->
+                                        <path d="M 125 58 Q 185 54 220 80 Q 235 96 230 115" stroke="url(#tasselGrad)" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                                        <circle cx="230" cy="116" r="4.5" fill="#c4b5fd" />
+                                        <path d="M 226 118 L 224 136 M 230 120 L 230 138 M 234 118 L 236 136" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round"/>
+                                    </g>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. ALL COURSES SECTION -->
+            <section class="glass-panel courses-grid-panel reveal-up" aria-labelledby="allCoursesHeading" style="margin-top: 32px;">
+                <div class="courses-section-header">
+                    <div class="courses-header-text">
+                        <span class="badge section-pill-badge">ALL COURSES</span>
+                        <h2 class="section-heading courses-main-title" id="allCoursesHeading">All Courses</h2>
+                        <p class="section-desc courses-main-desc">
+                            Explore career-focused learning paths designed around real-world skills and current software/AI roles.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 9 Career Course Cards Grid (Desktop 3 col, Tablet 2 col, Mobile 1 col) -->
+                <div class="courses-card-grid" aria-label="Career courses list">
+                    {% for course in courses %}
+                        <article class="course-card glass-card" id="course-card-{{ course.id }}">
+                            <!-- Card Header: Icon & Title -->
+                            <div class="course-card-header">
+                                <div class="course-icon-badge" style="background: {{ course.accent_bg }}; border-color: {{ course.accent_border }}; color: {{ course.accent_color }};" aria-hidden="true">
+                                    {% if course.icon_type == 'code' %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="16 18 22 12 16 6"></polyline>
+                                            <polyline points="8 6 2 12 8 18"></polyline>
+                                        </svg>
+                                    {% elif course.icon_type == 'terminal' %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="4 17 10 11 4 5"></polyline>
+                                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                                        </svg>
+                                    {% elif course.icon_type == 'layout' %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                                        </svg>
+                                    {% elif course.icon_type == 'server' %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                                        </svg>
+                                    {% elif course.icon_type == 'python' %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2zm4 8h-2v-4h2v4zm0-6h-2V7h2v4z"></path>
+                                        </svg>
+                                    {% elif course.icon_type == 'java' %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                                            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                                            <line x1="6" y1="1" x2="6" y2="4"></line>
+                                            <line x1="10" y1="1" x2="10" y2="4"></line>
+                                            <line x1="14" y1="1" x2="14" y2="4"></line>
+                                        </svg>
+                                    {% elif course.icon_type == 'chart' %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                                        </svg>
+                                    {% elif course.icon_type == 'robot' %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                                            <circle cx="12" cy="5" r="2"></circle>
+                                            <path d="M12 7v4"></path>
+                                            <line x1="8" y1="16" x2="8.01" y2="16"></line>
+                                            <line x1="16" y1="16" x2="16.01" y2="16"></line>
+                                        </svg>
+                                    {% else %}
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="18" cy="5" r="3"></circle>
+                                            <circle cx="6" cy="12" r="3"></circle>
+                                            <circle cx="18" cy="19" r="3"></circle>
+                                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                        </svg>
+                                    {% endif %}
+                                </div>
+                                <h3 class="course-card-title">{{ course.title }}</h3>
+                            </div>
+
+                            <!-- Career / Market Description -->
+                            <p class="course-card-desc">{{ course.description }}</p>
+
+                            <!-- Indicative CTC & Top Companies Metadata -->
+                            <div class="course-card-meta">
+                                <div class="course-ctc-row">
+                                    <span class="course-meta-label">Indicative CTC:</span>
+                                    <span class="course-ctc-value">{{ course.ctc }}</span>
+                                </div>
+                                <div class="course-companies-row">
+                                    <span class="course-meta-label">Top companies:</span>
+                                    <span class="course-companies-value">{{ course.companies }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Real Calculated User Progress -->
+                            {% set prog = (user_progress.get(course.id) if user_progress else None) or {'percentage': 0, 'completed_count': 0, 'total_topics': course.topics|length} %}
+                            <div class="course-card-progress-box" aria-label="Course completion progress">
+                                <div class="course-card-progress-meta">
+                                    <span class="course-progress-label">Your Progress</span>
+                                    <span class="course-progress-pct">{{ prog.percentage }}% Completed</span>
+                                </div>
+                                <div class="course-card-progress-bar" role="progressbar" aria-valuenow="{{ prog.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="course-card-progress-fill" style="width: {{ prog.percentage }}%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Card CTA Action -->
+                            <div class="course-card-action">
+                                <a href="/courses/{{ course.id }}" class="course-view-btn" aria-label="View {{ course.title }} curriculum and career path">
+                                    <span>View Course</span>
+                                    <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+                                </a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- 5. SUPPORTING VALUE PILLARS (Matching Reference Feature Strip) -->
+            <section class="glass-panel courses-pillars-panel reveal-up" aria-label="Platform advantages" style="margin-top: 32px;">
+                <div class="courses-pillars-grid">
+                    <!-- Pillar 1: Self-Paced Learning -->
+                    <div class="pillar-item">
+                        <div class="pillar-icon-circle icon-circle-purple" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                        </div>
+                        <div class="pillar-content">
+                            <strong class="pillar-title">Self-Paced Learning</strong>
+                            <span class="pillar-desc">Learn at your own pace anytime, anywhere.</span>
+                        </div>
+                    </div>
+
+                    <!-- Pillar 2: Download Resources -->
+                    <div class="pillar-item">
+                        <div class="pillar-icon-circle icon-circle-blue" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </div>
+                        <div class="pillar-content">
+                            <strong class="pillar-title">Download Resources</strong>
+                            <span class="pillar-desc">Access notes, code and resources for free.</span>
+                        </div>
+                    </div>
+
+                    <!-- Pillar 3: Community Support -->
+                    <div class="pillar-item">
+                        <div class="pillar-icon-circle icon-circle-indigo" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <div class="pillar-content">
+                            <strong class="pillar-title">Community Support</strong>
+                            <span class="pillar-desc">Join our learners community and grow together.</span>
+                        </div>
+                    </div>
+
+                    <!-- Pillar 4: Industry Certificate -->
+                    <div class="pillar-item">
+                        <div class="pillar-icon-circle icon-circle-violet" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="pillar-content">
+                            <strong class="pillar-title">Industry Certificate</strong>
+                            <span class="pillar-desc">Get certified and stand out in the job market.</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. CANONICAL CONTACT US SECTION -->
+            <div style="margin-top: 32px;">
+                {% include 'partials/contact_section.html' %}
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 7. FLOATING GLASS BOTTOM NAVIGATION (5 Items, Courses Active) -->
+    <nav class="bottom-nav-bar" aria-label="Secondary bottom navigation">
+        <div class="bottom-nav-inner glass-panel">
+            <a href="/jobs-home" class="bottom-nav-tab" aria-label="Jobs" title="Jobs">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Jobs</span>
+            </a>
+
+            <a href="/upload-resume" class="bottom-nav-tab" aria-label="Resume" title="Resume">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Resume</span>
+            </a>
+
+            <a href="/courses" class="bottom-nav-tab active" aria-current="page" aria-label="Courses" title="Courses">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Courses</span>
+            </a>
+
+            <a href="/profile" class="bottom-nav-tab" aria-label="Profile" title="Profile">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Profile</span>
+            </a>
+
+            <a href="/logout" class="bottom-nav-tab bottom-nav-logout-tab" data-logout-trigger="true" aria-label="Logout" title="Logout">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Logout</span>
+            </a>
+        </div>
+    </nav>
+</div>
+
+{% include 'partials/logout_modal.html' %}
+
+<script src="{{ url_for('static', filename='js/skillbridge.js') }}"></script>
+{% include "partials/ai_chatbot.html" %}
+<script src="{{ url_for('static', filename='js/ai_chatbot.js') }}"></script>
+</body>
+</html>

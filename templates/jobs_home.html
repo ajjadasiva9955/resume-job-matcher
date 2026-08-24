@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge.AI | Career Companion &amp; Jobs Home</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/skillbridge-icon.png') }}">
+
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (light ? "light" : "dark"));
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chatbot.css') }}">
+</head>
+<body class="jobs-home-page">
+<div class="sky-scene" aria-hidden="true">
+    <span class="moon"></span>
+    <span class="sun"></span>
+    <span class="planet planet-one"></span>
+    <span class="planet planet-two"></span>
+</div>
+<div class="ambient" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
+<div class="app-shell">
+    <!-- TOP NAVBAR -->
+    <header class="navbar" aria-label="Primary navigation">
+        <div class="container">
+            <div class="nav-inner glass-nav">
+                <a class="brand" href="/jobs-home" aria-label="SkillBridge.AI home">
+                    <span class="brand-mark navbar-logo-mark" aria-hidden="true">
+                        <img class="navbar-logo" src="{{ url_for('static', filename='images/skillbridge-icon.png') }}" alt="">
+                    </span>
+                    <span>SkillBridge.AI</span>
+                </a>
+
+                <div class="nav-actions">
+                    <nav class="nav-links" data-nav-links>
+                        <a class="nav-link active" href="/jobs-home" aria-current="page" aria-label="Home" title="Home">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            <span>Home</span>
+                        </a>
+                        <a class="nav-link" href="/jobs" aria-label="Find Jobs" title="Find Jobs">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                            </svg>
+                            <span class="nav-label-desktop">Find Jobs</span>
+                            <span class="nav-label-mobile">Jobs</span>
+                        </a>
+                        <a class="nav-link" href="/saved-jobs" aria-label="Saved Jobs" title="Saved Jobs">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span class="nav-label-desktop">Saved Jobs</span>
+                            <span class="nav-label-mobile">Saved</span>
+                        </a>
+                        <a class="nav-link" href="/applied-jobs" aria-label="Applied Jobs" title="Applied Jobs">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span class="nav-label-desktop">Applied Jobs</span>
+                            <span class="nav-label-mobile">Applied</span>
+                        </a>
+                        <a class="nav-link nav-link-contact-jobs" href="#contact" aria-label="Contact" title="Contact">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <span>Contact</span>
+                        </a>
+                    </nav>
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-icon sun-label">Sun</span>
+                            <span class="theme-icon moon-label">Moon</span>
+                        </span>
+                    </button>
+                    <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu" aria-expanded="false">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="section jobs-home-main" style="padding-top: 20px; padding-bottom: 90px;">
+        <div class="container jobs-home-container">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-stack" role="alert" style="margin-bottom: 24px;">
+                        {% for category, message in messages %}
+                            <div class="flash-alert flash-{{ category }}">
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- 1. MAIN HERO GLASS CARD -->
+            <section class="jobs-hero-card glass-panel reveal-up" aria-labelledby="hero-main-title">
+                <div class="jobs-hero-content">
+                    <div class="hero-top-badge">
+                        <span class="badge hero-pill-badge">WELCOME TO SKILLBRIDGE.AI</span>
+                    </div>
+
+                    <h1 id="hero-main-title" class="jobs-hero-title">
+                        Your AI-Powered<br>
+                        <span class="gradient-headline">Career Companion</span>
+                    </h1>
+
+                    <div class="sparkle-separator" aria-hidden="true">
+                        <span class="sparkle-line"></span>
+                        <span class="sparkle-star">✦</span>
+                        <span class="sparkle-line"></span>
+                    </div>
+
+                    <p class="jobs-hero-desc">
+                        Find the right job matches, improve your skills,
+                        analyze your resume, and accelerate your career
+                        with intelligent AI tools.
+                    </p>
+
+                    <div class="hero-action-box">
+                        <a href="/analyze-and-find-jobs" class="primary-hero-cta-btn" id="analyzeAndFindJobsBtn">
+                            <svg class="cta-doc-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <circle cx="11.5" cy="14.5" r="2.5"></circle>
+                                <path d="m16 19-2.5-2.5"></path>
+                            </svg>
+                            <span class="cta-btn-text">Analyze Resume &amp; Find Jobs</span>
+                            <svg class="cta-arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <div class="hero-security-note">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
+                        <span>Your data is secure and never shared.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. FOUR FEATURE CARDS GRID -->
+            <section class="feature-grid reveal-up delay-1" aria-label="SkillBridge AI Capabilities">
+                <!-- CARD 1: Smart Job Matching -->
+                <article class="feature-card glass-panel" id="about">
+                    <div class="feature-icon-circle icon-bg-blue" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                    </div>
+                    <h2 class="feature-card-title">Smart Job Matching</h2>
+                    <p class="feature-card-desc">Discover job opportunities that match your skills, experience and goals.</p>
+                    <a href="/jobs" class="feature-card-link link-blue">
+                        <span>Find Jobs</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                </article>
+
+                <!-- CARD 2: Resume Analyzer -->
+                <article class="feature-card glass-panel">
+                    <div class="feature-icon-circle icon-bg-green" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <h2 class="feature-card-title">Resume Analyzer</h2>
+                    <p class="feature-card-desc">Get ATS score, improve your resume and increase interview chances.</p>
+                    <a href="/resume-analyzer" class="feature-card-link link-green">
+                        <span>Analyze Resume</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                </article>
+
+                <!-- CARD 3: Skill Learning -->
+                <article class="feature-card glass-panel">
+                    <div class="feature-icon-circle icon-bg-purple" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                        </svg>
+                    </div>
+                    <h2 class="feature-card-title">Skill Learning</h2>
+                    <p class="feature-card-desc">Explore courses and build in-demand skills for your dream career.</p>
+                    <a href="/courses" class="feature-card-link link-purple">
+                        <span>Browse Courses</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                </article>
+
+                <!-- CARD 4: AI Career Agent -->
+                <article class="feature-card glass-panel">
+                    <div class="feature-icon-circle icon-bg-amber" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <line x1="19" y1="8" x2="19" y2="14"></line>
+                            <line x1="22" y1="11" x2="16" y2="11"></line>
+                        </svg>
+                    </div>
+                    <h2 class="feature-card-title">AI Career Agent</h2>
+                    <p class="feature-card-desc">Get AI cover letters, career advice and personalized guidance.</p>
+                    <a href="/ai-agent" class="feature-card-link link-amber">
+                        <span>Ask AI Agent</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                </article>
+            </section>
+
+            <!-- 3. STATISTICS SECTION -->
+            <section class="stats-panel glass-panel reveal-up delay-2" aria-label="SkillBridge.AI Platform Metrics">
+                <div class="stats-grid">
+                    <!-- STAT 1: Jobs Available -->
+                    <div class="stat-item">
+                        <div class="stat-icon-circle stat-icon-blue" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">10K+</span>
+                            <span class="stat-title">Jobs Available</span>
+                        </div>
+                    </div>
+
+                    <!-- STAT 2: Active Users -->
+                    <div class="stat-item">
+                        <div class="stat-icon-circle stat-icon-green" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                <polyline points="17 6 23 6 23 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">5K+</span>
+                            <span class="stat-title">Active Users</span>
+                        </div>
+                    </div>
+
+                    <!-- STAT 3: Match Accuracy -->
+                    <div class="stat-item">
+                        <div class="stat-icon-circle stat-icon-purple" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="6"></circle>
+                                <circle cx="12" cy="12" r="2"></circle>
+                            </svg>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">95%</span>
+                            <span class="stat-title">Match Accuracy</span>
+                        </div>
+                    </div>
+
+                    <!-- STAT 4: User Rating -->
+                    <div class="stat-item">
+                        <div class="stat-icon-circle stat-icon-amber" aria-hidden="true">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <div class="stat-meta">
+                            <span class="stat-number">4.8</span>
+                            <span class="stat-title">User Rating</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. CANONICAL CONTACT US SECTION -->
+            {% include 'partials/contact_section.html' %}
+
+        </div>
+    </main>
+
+    <!-- 5. FLOATING GLASS BOTTOM NAVIGATION (5 Items, Jobs Active) -->
+    <nav class="bottom-nav-bar" aria-label="Secondary bottom navigation">
+        <div class="bottom-nav-inner glass-panel">
+            <a href="/jobs-home" class="bottom-nav-tab active" aria-current="page" aria-label="Jobs" title="Jobs">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Jobs</span>
+            </a>
+
+            <a href="/upload-resume" class="bottom-nav-tab" aria-label="Resume" title="Resume">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Resume</span>
+            </a>
+
+            <a href="/courses" class="bottom-nav-tab" aria-label="Courses" title="Courses">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Courses</span>
+            </a>
+
+            <a href="/profile" class="bottom-nav-tab" aria-label="Profile" title="Profile">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Profile</span>
+            </a>
+
+            <a href="/logout" class="bottom-nav-tab bottom-nav-logout-tab" data-logout-trigger="true" aria-label="Logout" title="Logout">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Logout</span>
+            </a>
+        </div>
+    </nav>
+</div>
+
+{% include 'partials/logout_modal.html' %}
+
+<!-- FULL-SCREEN ANALYZE RESUME & FIND JOBS LOADING OVERLAY -->
+<div id="jobAnalysisLoadingOverlay" class="analysis-loading-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="analysisLoadingTitle" style="display: none;">
+    <div class="analysis-loading-backdrop"></div>
+    <div class="analysis-loading-card glass-panel">
+        <!-- Glowing Ring & Animated Avatar Spinner -->
+        <div class="analysis-loading-spinner-wrap" aria-hidden="true">
+            <div class="analysis-pulse-ring"></div>
+            <div class="analysis-pulse-ring-outer"></div>
+            <div class="analysis-avatar-circle">
+                <svg class="analysis-robot-svg" width="48" height="48" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="28" fill="url(#botGradHomeOverlay)" />
+                    <rect x="18" y="24" width="28" height="16" rx="8" fill="#0f172a" />
+                    <circle cx="26" cy="32" r="3.5" fill="#38bdf8" />
+                    <circle cx="38" cy="32" r="3.5" fill="#38bdf8" />
+                    <path d="M32 10v6M32 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" />
+                    <path d="M22 18h20" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" />
+                    <defs>
+                        <linearGradient id="botGradHomeOverlay" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#e0e7ff" />
+                            <stop offset="1" stop-color="#c7d2fe" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Heading & Informative Description -->
+        <h2 id="analysisLoadingTitle" class="analysis-loading-title">Analyzing Resume &amp; Finding Jobs...</h2>
+        <p class="analysis-loading-subtitle">
+            Your resume is being analyzed and jobs are being searched. Please wait while we process skills, match roles, and scan live job openings.
+        </p>
+
+        <!-- Dynamic Animated Progress Track -->
+        <div class="analysis-progress-track" aria-hidden="true">
+            <div class="analysis-progress-bar-fill" id="analysisProgressFill"></div>
+        </div>
+
+        <!-- Animated Sequential Process Steps -->
+        <div class="analysis-steps-list" aria-label="Analysis process steps">
+            <div class="analysis-step-item is-active" id="analysisStep0">
+                <span class="step-status-icon">
+                    <span class="step-dot-spinner"></span>
+                </span>
+                <span class="step-label">Reading your saved resume</span>
+            </div>
+            <div class="analysis-step-item is-pending" id="analysisStep1">
+                <span class="step-status-icon">
+                    <span class="step-dot-bullet">→</span>
+                </span>
+                <span class="step-label">Extracting skills</span>
+            </div>
+            <div class="analysis-step-item is-pending" id="analysisStep2">
+                <span class="step-status-icon">
+                    <span class="step-dot-bullet">→</span>
+                </span>
+                <span class="step-label">Matching suitable roles</span>
+            </div>
+            <div class="analysis-step-item is-pending" id="analysisStep3">
+                <span class="step-status-icon">
+                    <span class="step-dot-bullet">→</span>
+                </span>
+                <span class="step-label">Searching live jobs</span>
+            </div>
+            <div class="analysis-step-item is-pending" id="analysisStep4">
+                <span class="step-status-icon">
+                    <span class="step-dot-bullet">→</span>
+                </span>
+                <span class="step-label">Calculating job matches</span>
+            </div>
+            <div class="analysis-step-item is-pending" id="analysisStep5">
+                <span class="step-status-icon">
+                    <span class="step-dot-bullet">→</span>
+                </span>
+                <span class="step-label">Preparing your results</span>
+            </div>
+        </div>
+
+        <div class="analysis-loading-footer-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Live SerpAPI and Gemini AI search in progress</span>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/skillbridge.js') }}"></script>
+{% include "partials/ai_chatbot.html" %}
+<script src="{{ url_for('static', filename='js/ai_chatbot.js') }}"></script>
+</body>
+</html>

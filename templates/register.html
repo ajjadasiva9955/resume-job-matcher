@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge.AI | Create Account</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/skillbridge-icon.png') }}">
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (light ? "light" : "dark"));
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chatbot.css') }}">
+</head>
+<body class="setup-page">
+<div class="sky-scene" aria-hidden="true">
+    <span class="moon"></span>
+    <span class="sun"></span>
+    <span class="planet planet-one"></span>
+    <span class="planet planet-two"></span>
+</div>
+<div class="ambient" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
+<div class="app-shell">
+    <header class="navbar" aria-label="Primary navigation">
+        <div class="container">
+            <div class="nav-inner glass-nav">
+                <a class="brand" href="/login" aria-label="SkillBridge.AI home">
+                    <span class="brand-mark navbar-logo-mark" aria-hidden="true">
+                        <img class="navbar-logo" src="{{ url_for('static', filename='images/skillbridge-icon.png') }}" alt="">
+                    </span>
+                    <span>SkillBridge.AI</span>
+                </a>
+                <div class="nav-actions">
+                    <nav class="nav-links" data-nav-links>
+                        <a class="nav-link" href="/login" aria-label="Login" title="Login">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                                <polyline points="10 17 15 12 10 7"></polyline>
+                                <line x1="15" y1="12" x2="3" y2="12"></line>
+                            </svg>
+                            <span>Login</span>
+                        </a>
+                        <a class="nav-link active" href="/register" aria-label="Register" title="Register" aria-current="page">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                            <span>Register</span>
+                        </a>
+                    </nav>
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-icon sun-label">Sun</span>
+                            <span class="theme-icon moon-label">Moon</span>
+                        </span>
+                    </button>
+                    <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu" aria-expanded="false">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="hero">
+        <div class="container setup-grid">
+            <section class="hero-copy reveal-up">
+                <span class="eyebrow">Join SkillBridge.AI</span>
+                <h1 class="page-title">Create Your Account</h1>
+                <p class="lead">
+                    Start your SkillBridge.AI journey. Set up your profile to extract skills, discover targeted job roles, and get AI-assisted career advancement.
+                </p>
+                <div class="trust-row">
+                    <span class="mini-pill">Encrypted Password</span>
+                    <span class="mini-pill">Zero Paid Lock-in</span>
+                    <span class="mini-pill">Free Local Storage</span>
+                </div>
+            </section>
+
+            <section class="setup-card glass-panel premium-glass reveal-up delay-1" aria-labelledby="register-title">
+                <span class="badge">New Registration</span>
+                <h2 class="panel-title" id="register-title">Create Account</h2>
+                <p class="panel-subtitle">Fill in the details below to create your secure SkillBridge.AI account.</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-stack" role="alert">
+                            {% for category, message in messages %}
+                                <div class="flash-alert flash-{{ category }}">
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form class="setup-form" action="/register" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="api-section glass-card">
+                        <div>
+                            <label class="api-title" for="username">Username</label>
+                            <p class="api-desc">Choose a unique username (3-30 letters, numbers, underscores).</p>
+                        </div>
+                        <input class="glass-input" type="text" name="username" id="username" placeholder="Username" required autocomplete="username" value="{{ username or '' }}">
+                    </div>
+
+                    <div class="api-section glass-card">
+                        <div>
+                            <label class="api-title" for="email">Email ID</label>
+                            <p class="api-desc">Enter your valid email address for notifications and password recovery.</p>
+                        </div>
+                        <input class="glass-input" type="email" name="email" id="email" placeholder="Email ID" required autocomplete="email" value="{{ email or '' }}">
+                    </div>
+
+                    <div class="api-section glass-card">
+                        <div>
+                            <label class="api-title" for="password">Password</label>
+                            <p class="api-desc">Must be at least 8 characters with uppercase, lowercase, and a number.</p>
+                        </div>
+                        <input class="glass-input" type="password" name="password" id="password" placeholder="Password" required autocomplete="new-password">
+                    </div>
+
+                    <button type="submit" class="primary-button" style="width: 100%;">
+                        <span>Create Account</span>
+                        <span aria-hidden="true">-&gt;</span>
+                    </button>
+
+                    <div class="links" style="justify-content: center; margin-top: 10px;">
+                        <span>Already have an account?</span>
+                        <a href="/login">Login</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/skillbridge.js') }}"></script>
+{% include "partials/ai_chatbot.html" %}
+<script src="{{ url_for('static', filename='js/ai_chatbot.js') }}"></script>
+</body>
+</html>

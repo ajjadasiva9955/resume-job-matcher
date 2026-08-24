@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge.AI | Applied Jobs</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/skillbridge-icon.png') }}">
+
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (light ? "light" : "dark"));
+        })();
+    </script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chatbot.css') }}">
+</head>
+<body class="jobs-listing-page applied-jobs-page">
+<div class="sky-scene" aria-hidden="true">
+    <span class="moon"></span>
+    <span class="sun"></span>
+    <span class="planet planet-one"></span>
+    <span class="planet planet-two"></span>
+</div>
+<div class="ambient" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
+<div class="app-shell">
+    <!-- 1. TOP NAVBAR -->
+    <header class="navbar" aria-label="Primary navigation">
+        <div class="container">
+            <div class="nav-inner glass-nav">
+                <a class="brand" href="/jobs-home" aria-label="SkillBridge.AI home">
+                    <span class="brand-mark navbar-logo-mark" aria-hidden="true">
+                        <img class="navbar-logo" src="{{ url_for('static', filename='images/skillbridge-icon.png') }}" alt="SkillBridge.AI logo">
+                    </span>
+                    <span>SkillBridge.AI</span>
+                </a>
+
+                <div class="nav-actions">
+                    <nav class="nav-links" data-nav-links>
+                        <a class="nav-link" href="/jobs-home" aria-label="Home" title="Home">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            <span>Home</span>
+                        </a>
+                        <a class="nav-link" href="/jobs" aria-label="Find Jobs" title="Find Jobs">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                            </svg>
+                            <span class="nav-label-desktop">Find Jobs</span>
+                            <span class="nav-label-mobile">Jobs</span>
+                        </a>
+                        <a class="nav-link" href="/saved-jobs" aria-label="Saved Jobs" title="Saved Jobs">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span class="nav-label-desktop">Saved Jobs</span>
+                            <span class="nav-label-mobile">Saved</span>
+                        </a>
+                        <a class="nav-link active" href="/applied-jobs" aria-current="page" aria-label="Applied Jobs" title="Applied Jobs">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span class="nav-label-desktop">Applied Jobs</span>
+                            <span class="nav-label-mobile">Applied</span>
+                        </a>
+                        <a class="nav-link nav-link-contact-jobs" href="#contact" aria-label="Contact" title="Contact">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <span>Contact</span>
+                        </a>
+                    </nav>
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-icon sun-label">Sun</span>
+                            <span class="theme-icon moon-label">Moon</span>
+                        </span>
+                    </button>
+                    <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu" aria-expanded="false">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="dashboard job-listing-dashboard" style="padding-top: 20px; padding-bottom: 90px;">
+        <div class="container content-stack">
+
+            <!-- APPLIED JOBS SECTION -->
+            <section class="glass-panel jobs-panel-redesign reveal-up" id="applied-jobs-section" aria-labelledby="applied-jobs-title">
+                <div class="section-top-header">
+                    <div class="section-title-wrap">
+                        <span class="badge section-pill-badge" style="background: rgba(16, 185, 129, 0.16); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">APPLICATIONS TRACKER</span>
+                        <h1 class="section-heading" id="applied-jobs-title">Applied Jobs</h1>
+                        <p class="section-desc">
+                            Track all the jobs you've applied for.
+                        </p>
+                    </div>
+                    <a href="/jobs" class="view-all-jobs-link">
+                        <span>Find More Jobs</span>
+                        <span aria-hidden="true">&rarr;</span>
+                    </a>
+                </div>
+
+                <!-- Applied Jobs List Container -->
+                <div class="jobs-vertical-list" id="appliedJobsList" aria-label="Applied jobs list">
+                    {% if applied_jobs and applied_jobs|length > 0 %}
+                        {% for job in applied_jobs %}
+                        <article class="job-item-card"
+                                 id="applied-card-{{ job.job_id }}"
+                                 data-job-id="{{ job.job_id }}"
+                                 data-job-title="{{ job.title }}"
+                                 data-job-company="{{ job.company_name }}"
+                                 data-job-location="{{ job.location }}"
+                                 data-job-type="{{ job.job_type or 'Full-time' }}"
+                                 data-job-experience="{{ job.experience or '' }}"
+                                 data-job-salary="{{ job.salary or 'Not mentioned' }}"
+                                 data-job-openings="{{ job.openings or 'NA' }}"
+                                 data-job-match="{{ job.match_percent }}"
+                                 data-job-posted="{{ job.posted_at or '' }}"
+                                 data-job-apply="{{ job.apply_link or '' }}"
+                                 data-job-brand="{{ job.company_brand or 'generic' }}">
+                            <div class="job-item-left">
+                                <!-- Company Logo / Brand Avatar -->
+                                <div class="company-brand-logo brand-{{ job.company_brand or 'generic' }}" aria-hidden="true">
+                                    {% if job.company_brand == 'microsoft' %}
+                                    <svg width="22" height="22" viewBox="0 0 24 24">
+                                        <path fill="#f25022" d="M1 1h10v10H1z"/>
+                                        <path fill="#00a4ef" d="M1 13h10v10H1z"/>
+                                        <path fill="#7fba00" d="M13 1h10v10H13z"/>
+                                        <path fill="#ffb900" d="M13 13h10v10H13z"/>
+                                    </svg>
+                                    {% elif job.company_brand == 'google' %}
+                                    <svg width="22" height="22" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                                    </svg>
+                                    {% elif job.company_brand == 'swiggy' %}
+                                    <span>S</span>
+                                    {% elif job.company_brand == 'zomato' %}
+                                    <span>Z</span>
+                                    {% elif job.thumbnail %}
+                                    <img src="{{ job.thumbnail }}" alt="{{ job.company_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                    <span>{{ job.company_name[:2].upper() }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Job Info Block -->
+                                <div class="job-info-block">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <h3 class="job-item-title">{{ job.title }}</h3>
+                                        <!-- PROMINENT GREEN APPLIED BADGE -->
+                                        <span class="applied-status-badge" aria-label="Application Status: Applied">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                            <span>✓ APPLIED</span>
+                                        </span>
+                                    </div>
+                                    <div class="job-company-row">
+                                        <span>{{ job.company_name }}</span>
+                                        <span class="verified-badge-icon" title="Verified Employer" aria-label="Verified">✓</span>
+                                    </div>
+                                    <div class="job-meta-row">
+                                        <span class="job-meta-item">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                                <circle cx="12" cy="10" r="3"></circle>
+                                            </svg>
+                                            <span>{{ job.location }}</span>
+                                        </span>
+                                        <span class="job-meta-item">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                                            </svg>
+                                            <span>{{ job.job_type or 'Full-time' }}</span>
+                                        </span>
+                                        {% if job.experience %}
+                                        <span class="job-meta-item">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                            <span>{{ job.experience }}</span>
+                                        </span>
+                                        {% endif %}
+                                        <span class="job-meta-item">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="9" cy="7" r="4"></circle>
+                                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                            </svg>
+                                            <span>Openings: {{ job.openings or 'NA' }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side: Match Pill, Salary, and Actions -->
+                            <div class="job-item-right">
+                                <div class="job-top-metrics">
+                                    <span class="job-match-pill">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                        </svg>
+                                        <span>{{ job.match_percent }}% Match</span>
+                                    </span>
+                                    <span class="job-salary-text">{{ job.salary or 'Not mentioned' }}</span>
+                                </div>
+
+                                <div class="job-bottom-actions">
+                                    <!-- View Job / External Application URL -->
+                                    {% if job.apply_link %}
+                                    <a class="view-job-btn" href="{{ job.apply_link }}" target="_blank" rel="noopener noreferrer">
+                                        <span>View Job</span>
+                                        <span aria-hidden="true">&rarr;</span>
+                                    </a>
+                                    {% else %}
+                                    <span class="view-job-btn is-disabled" title="Application link unavailable">Link unavailable</span>
+                                    {% endif %}
+
+                                    <!-- AI Cover Letter Button -->
+                                    <button class="cover-letter-action-btn" type="button"
+                                            data-cover-title="{{ job.title }}"
+                                            data-cover-company="{{ job.company_name }}"
+                                            data-cover-location="{{ job.location }}"
+                                            onclick="generateCover(this.getAttribute('data-cover-title'), this.getAttribute('data-cover-company'), this.getAttribute('data-cover-location'))"
+                                            title="Generate AI Cover Letter for {{ job.company_name }}">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                                        </svg>
+                                        <span>AI Cover</span>
+                                    </button>
+
+                                    <!-- Mark as Not Applied Button -->
+                                    <button class="mark-not-applied-btn" type="button" onclick="markNotAppliedCard(this, '{{ job.job_id }}')" aria-label="Mark as not applied">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                        <span>Mark as Not Applied</span>
+                                    </button>
+
+                                    <!-- Save / Unsave toggle -->
+                                    <button class="save-job-btn {% if job.is_saved %}is-saved{% endif %}"
+                                            type="button"
+                                            onclick="toggleSaveJob(this)"
+                                            aria-label="{% if job.is_saved %}Remove from saved jobs{% else %}Save this job opportunity{% endif %}"
+                                            data-job-id="{{ job.job_id }}">
+                                        <svg class="save-btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="{% if job.is_saved %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                                        </svg>
+                                        <span class="save-btn-text">{% if job.is_saved %}✓ Saved{% else %}Save{% endif %}</span>
+                                    </button>
+
+                                    <span class="job-posted-time">{{ job.posted_at or 'Posted recently' }}</span>
+                                </div>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Proper Empty State -->
+                        <div class="empty-jobs-card glass-panel" id="appliedEmptyState">
+                            <div class="empty-jobs-icon icon-applied-empty" aria-hidden="true">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <h2 class="empty-jobs-title">No Applied Jobs Yet</h2>
+                            <p class="empty-jobs-desc">Mark jobs as applied from Find Jobs to track your applications here.</p>
+                            <a href="/jobs" class="empty-jobs-action-btn">
+                                <span>Find Jobs</span>
+                                <span aria-hidden="true">&rarr;</span>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- 6. CONTACT US SECTION (CANONICAL GLOBAL STANDARD) -->
+            {% include 'partials/contact_section.html' %}
+
+        </div>
+    </main>
+
+    <!-- 7. FLOATING GLASS BOTTOM NAVIGATION (5 Items, Jobs Active) -->
+    <nav class="bottom-nav-bar" aria-label="Secondary bottom navigation">
+        <div class="bottom-nav-inner glass-panel">
+            <a href="/jobs" class="bottom-nav-tab active" aria-current="page" aria-label="Jobs" title="Jobs">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Jobs</span>
+            </a>
+
+            <a href="/upload-resume" class="bottom-nav-tab" aria-label="Resume" title="Resume">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Resume</span>
+            </a>
+
+            <a href="/courses" class="bottom-nav-tab" aria-label="Courses" title="Courses">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Courses</span>
+            </a>
+
+            <a href="/profile" class="bottom-nav-tab" aria-label="Profile" title="Profile">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Profile</span>
+            </a>
+
+            <a href="/logout" class="bottom-nav-tab bottom-nav-logout-tab" data-logout-trigger="true" aria-label="Logout" title="Logout">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Logout</span>
+            </a>
+        </div>
+    </nav>
+</div>
+
+{% include 'partials/logout_modal.html' %}
+
+<!-- AI COVER LETTER / LEARNING PLAN MODAL -->
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-title">
+    <div class="modal-content glass-modal">
+        <div class="modal-head">
+            <h2 class="modal-title" id="modal-title">
+                <span class="brand-mark" aria-hidden="true">AI</span>
+                <span>AI Career Agent</span>
+            </h2>
+            <button class="icon-button" type="button" onclick="closeModal()" aria-label="Close modal">✕</button>
+        </div>
+        <div class="modal-body" id="modalText"></div>
+        <div class="modal-footer" id="modalFooter" style="display: none; padding: 14px 20px; border-top: 1px solid var(--glass-border); gap: 10px; justify-content: flex-end; align-items: center;">
+            <button class="copy-cover-btn" id="copyCoverBtn" type="button" onclick="copyCoverLetter()">
+                <span class="copy-icon" aria-hidden="true">📋</span>
+                <span id="copyBtnText">Copy Cover Letter</span>
+            </button>
+            <button class="modal-close-btn" type="button" onclick="closeModal()">
+                <span>Close</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/skillbridge.js') }}"></script>
+{% include "partials/ai_chatbot.html" %}
+<script src="{{ url_for('static', filename='js/ai_chatbot.js') }}"></script>
+</body>
+</html>

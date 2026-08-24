@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge.AI | User Profile &amp; Account Settings</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/skillbridge-icon.png') }}">
+
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (light ? "light" : "dark"));
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chatbot.css') }}">
+</head>
+<body class="profile-page">
+<div class="sky-scene" aria-hidden="true">
+    <span class="moon"></span>
+    <span class="sun"></span>
+    <span class="planet planet-one"></span>
+    <span class="planet planet-two"></span>
+</div>
+<div class="ambient" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
+<div class="app-shell">
+    <!-- TOP NAVBAR -->
+    <header class="navbar" aria-label="Primary navigation">
+        <div class="container">
+            <div class="nav-inner glass-nav">
+                <a class="brand" href="/jobs-home" aria-label="SkillBridge.AI home">
+                    <span class="brand-mark navbar-logo-mark" aria-hidden="true">
+                        <img class="navbar-logo" src="{{ url_for('static', filename='images/skillbridge-icon.png') }}" alt="">
+                    </span>
+                    <span>SkillBridge.AI</span>
+                </a>
+
+                <div class="nav-actions">
+                    <nav class="nav-links" data-nav-links>
+                        <a class="nav-link active" href="#profile" aria-current="page" aria-label="User Profile" title="User Profile">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span class="nav-label-desktop">User Profile</span>
+                            <span class="nav-label-mobile">User</span>
+                        </a>
+                        <a class="nav-link" href="#api-keys" aria-label="API Key Setup" title="API Key Setup">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m21 2-2 2m-6 6 2-2m-8 8L3 20a2 2 0 0 0 2 2l4-4m-6-6 8 8 9-9a4 4 0 0 0-6-6l-9 9Z"></path>
+                                <circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                            </svg>
+                            <span class="nav-label-desktop">API Key Setup</span>
+                            <span class="nav-label-mobile">API</span>
+                        </a>
+                        <a class="nav-link" href="#resume" aria-label="Your Resume" title="Your Resume">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            <span class="nav-label-desktop">Your Resume</span>
+                            <span class="nav-label-mobile">Resume</span>
+                        </a>
+                        <a class="nav-link" href="#contact" aria-label="Contact" title="Contact">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <span>Contact</span>
+                        </a>
+                    </nav>
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-icon sun-label">Sun</span>
+                            <span class="theme-icon moon-label">Moon</span>
+                        </span>
+                    </button>
+                    <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu" aria-expanded="false">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="section profile-main" style="padding-top: 24px; padding-bottom: 96px;">
+        <div class="container profile-main-container">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-stack" role="alert" style="margin-bottom: 8px;">
+                        {% for category, message in messages %}
+                            <div class="flash-alert flash-{{ category }}">
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- ============================================================
+                 SECTION 1: USER PROFILE & PASSWORD
+                 ============================================================ -->
+            <section class="profile-card" id="profile" aria-labelledby="heading-user-profile">
+                <!-- Left Column -->
+                <div class="profile-card-left">
+                    <div class="profile-avatar-circle" aria-hidden="true">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <h2 class="profile-card-title" id="heading-user-profile">User Profile</h2>
+                    <p class="profile-card-desc">Manage your personal information and account security.</p>
+                </div>
+
+                <!-- Right Column (Form) -->
+                <div class="profile-card-right">
+                    <form id="form-password-update" action="/profile/change-password" method="POST" class="profile-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="profile-grid-2">
+                            <!-- Username (Display Only) -->
+                            <div class="profile-field-group">
+                                <label class="profile-label" for="profile-username">Username</label>
+                                <div class="profile-input-wrap">
+                                    <input type="text" id="profile-username" class="profile-input display-only" value="{{ user.username if user else '' }}" readonly aria-readonly="true">
+                                    <span class="profile-input-icon" aria-hidden="true">
+                                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Update Password (New Password) -->
+                            <div class="profile-field-group">
+                                <label class="profile-label" for="profile-new-password">Update Password</label>
+                                <div class="profile-input-wrap">
+                                    <input type="password" id="profile-new-password" name="new_password" class="profile-input" placeholder="••••••••••••••••" autocomplete="new-password">
+                                    <button type="button" class="profile-pw-toggle" data-target="profile-new-password" aria-label="Toggle password visibility">
+                                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+                                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p class="profile-field-hint">Enter new password (min. 6 characters).</p>
+                            </div>
+
+                            <!-- Email Address (Display Only) -->
+                            <div class="profile-field-group">
+                                <label class="profile-label" for="profile-email">Email Address</label>
+                                <div class="profile-input-wrap">
+                                    <input type="email" id="profile-email" class="profile-input display-only" value="{{ user.email if user else '' }}" readonly aria-readonly="true">
+                                    <span class="profile-input-icon" aria-hidden="true">
+                                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                                <p class="profile-field-hint">Email cannot be changed.</p>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="profile-field-group">
+                                <label class="profile-label" for="profile-confirm-password">Confirm Password</label>
+                                <div class="profile-input-wrap">
+                                    <input type="password" id="profile-confirm-password" name="confirm_password" class="profile-input" placeholder="••••••••••••••••" autocomplete="new-password">
+                                    <button type="button" class="profile-pw-toggle" data-target="profile-confirm-password" aria-label="Toggle password visibility">
+                                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+                                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <p class="profile-field-hint">Re-enter your new password.</p>
+                            </div>
+                        </div>
+
+                        <!-- Change Password Button -->
+                        <div style="margin-top: 18px;">
+                            <button type="submit" class="profile-btn-gradient" id="btn-change-password">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <span>Change Password</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 SECTION 2: API KEY SETUP
+                 ============================================================ -->
+            <section class="profile-card" id="api-keys" aria-labelledby="heading-api-key-setup">
+                <!-- Left Column -->
+                <div class="profile-card-left">
+                    <div class="profile-avatar-circle" aria-hidden="true">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m21 2-2 2m-6 6 2-2m-8 8L3 20a2 2 0 0 0 2 2l4-4m-6-6 8 8 9-9a4 4 0 0 0-6-6l-9 9Z"></path>
+                            <circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                        </svg>
+                    </div>
+                    <h2 class="profile-card-title" id="heading-api-key-setup">API Key Setup</h2>
+                    <p class="profile-card-desc">Manage your API keys for integrations and services.</p>
+                </div>
+
+                <!-- Right Column -->
+                <div class="profile-card-right">
+                    <!-- Warning Alerts if any API is in Error/Limit state -->
+                    {% if serpapi_account and serpapi_account.is_quota_exhausted %}
+                    <div class="profile-api-alert alert-warning" role="alert">
+                        <div class="alert-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div class="alert-content">
+                            <strong>SerpAPI Search Limit Reached</strong>
+                            <p>Your monthly or hourly SerpAPI search limit has been exhausted. Please update your key below to resume searching jobs.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if gemini_usage and gemini_usage.status == 'RATE LIMITED' %}
+                    <div class="profile-api-alert alert-warning" role="alert">
+                        <div class="alert-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div class="alert-content">
+                            <strong>Gemini Rate/Quota Limit Reached</strong>
+                            <p>Your Gemini API quota has been reached. Please update your Gemini API key below or retry later.</p>
+                        </div>
+                    </div>
+                    {% elif gemini_usage and gemini_usage.status == 'MODEL UNAVAILABLE' %}
+                    <div class="profile-api-alert alert-danger" role="alert">
+                        <div class="alert-icon-box">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div class="alert-content">
+                            <strong>Gemini Model Unavailable</strong>
+                            <p>The configured model (<code>{{ gemini_model }}</code>) is not accessible with your project key. Please update your Gemini API key below.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Current API Keys Display -->
+                    <h3 class="profile-subheading">Your Current API Keys</h3>
+                    <div class="profile-key-table" aria-label="Configured API Keys">
+                        <!-- SerpAPI Key Row -->
+                        <div class="profile-key-row">
+                            <span class="profile-key-name">SerpAPI Key</span>
+                            <span class="profile-key-mask" id="display-serp-mask">
+                                {{ keys.serpapi_masked_bullet or keys.serpapi_masked or 'Not configured' }}
+                            </span>
+                            <span class="profile-key-status-badge {% if keys.has_serpapi %}badge-active{% else %}badge-unconfigured{% endif %}">
+                                {{ serpapi_account.status_display if (serpapi_account and serpapi_account.status_display) else ('ACTIVE' if keys.has_serpapi else 'NOT CONFIGURED') }}
+                            </span>
+                            <span class="profile-key-date">
+                                {{ 'Added ' + (keys.updated_at | format_date) if keys.has_serpapi else '' }}
+                            </span>
+                        </div>
+
+                        <!-- Gemini API Key Row -->
+                        <div class="profile-key-row">
+                            <span class="profile-key-name">Gemini API Key</span>
+                            <span class="profile-key-mask" id="display-gemini-mask">
+                                {{ keys.gemini_masked_bullet or keys.gemini_masked or 'Not configured' }}
+                            </span>
+                            <span class="profile-key-status-badge {% if keys.has_gemini %}badge-active{% else %}badge-unconfigured{% endif %}">
+                                {{ gemini_usage.status if (gemini_usage and gemini_usage.status) else ('ACTIVE' if keys.has_gemini else 'NOT CONFIGURED') }}
+                            </span>
+                            <span class="profile-key-date">
+                                {{ 'Added ' + (keys.updated_at | format_date) if keys.has_gemini else '' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- LIVE API USAGE & LIMIT DASHBOARD CARDS -->
+                    <div class="api-usage-dashboard-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;">
+                        <!-- SERPAPI USAGE PANEL -->
+                        <div class="api-usage-card">
+                            <div class="api-card-header">
+                                <div class="api-card-title-wrap">
+                                    <span class="api-service-dot dot-serp"></span>
+                                    <h4 class="api-card-title">SerpAPI Usage &amp; Limits</h4>
+                                </div>
+                                <span class="api-badge-status {% if serpapi_account and serpapi_account.status_display == 'ACTIVE' %}badge-ok{% elif serpapi_account and serpapi_account.status_display == 'LIMITED' %}badge-warn{% else %}badge-neutral{% endif %}">
+                                    {{ serpapi_account.status_display if (serpapi_account and serpapi_account.status_display) else 'UNCONFIGURED' }}
+                                </span>
+                            </div>
+                            <div class="api-card-body">
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Plan Name</span>
+                                    <span class="api-stat-value">{{ serpapi_account.plan_name if (serpapi_account and serpapi_account.plan_name) else 'Not available' }}</span>
+                                </div>
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Monthly Searches</span>
+                                    <span class="api-stat-value">
+                                        {% if serpapi_account and serpapi_account.this_month_usage is not none and serpapi_account.searches_per_month is not none %}
+                                            {{ serpapi_account.this_month_usage }} / {{ serpapi_account.searches_per_month }}
+                                        {% elif serpapi_account and serpapi_account.this_month_usage is not none %}
+                                            {{ serpapi_account.this_month_usage }} used
+                                        {% else %}
+                                            Not available
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Remaining Searches</span>
+                                    <span class="api-stat-value">
+                                        {% if serpapi_account and (serpapi_account.plan_searches_left is not none or serpapi_account.total_searches_left is not none) %}
+                                            {{ serpapi_account.plan_searches_left if serpapi_account.plan_searches_left is not none else serpapi_account.total_searches_left }} left
+                                        {% else %}
+                                            Not available
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Hourly Usage</span>
+                                    <span class="api-stat-value">
+                                        {% if serpapi_account and serpapi_account.this_hour_searches is not none and serpapi_account.account_rate_limit_per_hour is not none %}
+                                            {{ serpapi_account.this_hour_searches }} / {{ serpapi_account.account_rate_limit_per_hour }}
+                                        {% elif serpapi_account and serpapi_account.this_hour_searches is not none %}
+                                            {{ serpapi_account.this_hour_searches }} this hour
+                                        {% else %}
+                                            Not available
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Next Renewal</span>
+                                    <span class="api-stat-value">{{ serpapi_account.plan_renewal_date if (serpapi_account and serpapi_account.plan_renewal_date) else 'Not available' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GEMINI USAGE PANEL -->
+                        <div class="api-usage-card">
+                            <div class="api-card-header">
+                                <div class="api-card-title-wrap">
+                                    <span class="api-service-dot dot-gemini"></span>
+                                    <h4 class="api-card-title">Gemini AI Usage</h4>
+                                </div>
+                                <span class="api-badge-status {% if gemini_usage and gemini_usage.status == 'ACTIVE' %}badge-ok{% elif gemini_usage and gemini_usage.status == 'RATE LIMITED' %}badge-warn{% else %}badge-neutral{% endif %}">
+                                    {{ gemini_usage.status if gemini_usage else 'UNCONFIGURED' }}
+                                </span>
+                            </div>
+                            <div class="api-card-body">
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Configured Model</span>
+                                    <span class="api-stat-value"><code>{{ gemini_model }}</code></span>
+                                </div>
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Requests This Minute</span>
+                                    <span class="api-stat-value">{{ gemini_usage.requests_this_minute if gemini_usage else 0 }}</span>
+                                </div>
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Requests Today</span>
+                                    <span class="api-stat-value">{{ gemini_usage.requests_today if gemini_usage else 0 }}</span>
+                                </div>
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Last Request</span>
+                                    <span class="api-stat-value">{{ gemini_usage.last_request | format_date if (gemini_usage and gemini_usage.last_request) else 'None recorded' }}</span>
+                                </div>
+                                <div class="api-stat-row">
+                                    <span class="api-stat-label">Limits Policy</span>
+                                    <span class="api-stat-value" style="font-size: 11px;">
+                                        <a href="https://aistudio.google.com" target="_blank" rel="noopener" class="profile-key-link" style="font-size: 11px;">Check Google AI Studio</a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add or Update Keys Form -->
+                    <form id="form-api-keys" action="/profile/update-api-keys" method="POST" style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <h3 class="profile-subheading">Add New or Update API Keys</h3>
+
+                        <!-- New SerpAPI Key Input -->
+                        <div class="profile-field-group">
+                            <label class="profile-label" for="profile-new-serpapi">New SerpAPI Key</label>
+                            <div class="profile-key-input-row">
+                                <div class="profile-input-wrap">
+                                    <input type="password" id="profile-new-serpapi" name="serpapi_key" class="profile-input" placeholder="Enter your new SerpAPI key" autocomplete="off">
+                                </div>
+                                <a href="https://serpapi.com/manage-api-key" target="_blank" rel="noopener noreferrer" class="profile-key-link">
+                                    <span>Get key from <strong>serpapi.com</strong></span>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                        <polyline points="15 3 21 3 21 9"></polyline>
+                                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- New Gemini API Key Input -->
+                        <div class="profile-field-group">
+                            <label class="profile-label" for="profile-new-gemini">New Gemini API Key</label>
+                            <div class="profile-key-input-row">
+                                <div class="profile-input-wrap">
+                                    <input type="password" id="profile-new-gemini" name="gemini_key" class="profile-input" placeholder="Enter your new Gemini API key" autocomplete="off">
+                                </div>
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="profile-key-link">
+                                    <span>Get key from <strong>aistudio.google.com</strong></span>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                        <polyline points="15 3 21 3 21 9"></polyline>
+                                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Update API Keys Button -->
+                        <div style="margin-top: 6px;">
+                            <button type="submit" class="profile-btn-gradient" id="btn-update-api-keys">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m21 2-2 2m-6 6 2-2m-8 8L3 20a2 2 0 0 0 2 2l4-4m-6-6 8 8 9-9a4 4 0 0 0-6-6l-9 9Z"></path>
+                                    <circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                                </svg>
+                                <span>Update API Keys</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- API KEY HISTORY TABLE -->
+                    {% if api_key_history and api_key_history | length > 0 %}
+                    <div class="api-key-history-section" style="margin-top: 24px;">
+                        <h3 class="profile-subheading">API Key History</h3>
+                        <div class="key-history-table-wrap">
+                            <table class="key-history-table" aria-label="API Key History">
+                                <thead>
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Masked Key</th>
+                                        <th>Added On</th>
+                                        <th>Last Used</th>
+                                        <th>Status</th>
+                                        <th>Plan / Limit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in api_key_history %}
+                                    <tr class="{% if item.is_current %}row-current{% endif %}">
+                                        <td style="text-transform: capitalize; font-weight: 700;">{{ item.service }}</td>
+                                        <td style="font-family: monospace; font-size: 12.5px;">{{ item.masked_key }}</td>
+                                        <td>{{ item.added_at | format_date }}</td>
+                                        <td>{{ item.last_used_at | format_date if item.last_used_at else '—' }}</td>
+                                        <td>
+                                            <span class="hist-badge hist-badge-{{ item.status | lower | replace(' ', '-') }}">
+                                                {{ item.status }}
+                                            </span>
+                                        </td>
+                                        <td style="font-size: 12px; color: var(--text-muted);">
+                                            {% if item.plan_name %}
+                                                {{ item.plan_name }}
+                                                {% if item.last_known_limit %}
+                                                    ({{ item.last_known_limit }} searches/mo)
+                                                {% endif %}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 SECTION 3: YOUR RESUME
+                 ============================================================ -->
+            <section class="profile-card" id="resume" aria-labelledby="heading-your-resume">
+                <!-- Left Column -->
+                <div class="profile-card-left">
+                    <div class="profile-avatar-circle" aria-hidden="true">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                    </div>
+                    <h2 class="profile-card-title" id="heading-your-resume">Your Resume</h2>
+                    <p class="profile-card-desc">Upload and manage your resume for better job matching.</p>
+                </div>
+
+                <!-- Right Column -->
+                <div class="profile-card-right">
+                    <!-- Current Resume Display -->
+                    <h3 class="profile-subheading">Your Current Resume</h3>
+                    {% if resume %}
+                    <div class="profile-current-resume">
+                        <div class="profile-resume-main">
+                            <span class="profile-pdf-badge" aria-hidden="true">PDF</span>
+                            <div class="profile-resume-info">
+                                <h4 class="profile-resume-name" id="display-resume-filename">{{ resume.original_filename }}</h4>
+                                <p class="profile-resume-meta">
+                                    Uploaded on {{ resume.uploaded_at | format_date }} &bull; {{ resume.file_size | format_size }}
+                                </p>
+                            </div>
+                        </div>
+                        <a href="/profile/download-resume" class="profile-download-btn" id="btn-download-resume" aria-label="Download current resume">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Download</span>
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="profile-current-resume" style="justify-content: flex-start;">
+                        <span class="profile-pdf-badge" style="background: #f1f5f9; color: #64748b; border-color: #e2e8f0;" aria-hidden="true">PDF</span>
+                        <div class="profile-resume-info">
+                            <h4 class="profile-resume-name" style="color: var(--text-muted);">No resume uploaded yet</h4>
+                            <p class="profile-resume-meta">Upload a PDF resume below to start AI job matching.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Upload New Resume Form -->
+                    <form id="form-resume-upload" action="/profile/update-resume" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 14px; margin-top: 4px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <h3 class="profile-subheading">Upload New Resume</h3>
+
+                        <!-- Dropzone Area -->
+                        <div class="profile-dropzone" id="profile-dropzone" tabindex="0" role="button" aria-label="Upload PDF resume dropzone">
+                            <div class="profile-dropzone-cloud" aria-hidden="true">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                                    <path d="M12 12v9"></path>
+                                    <path d="m16 16-4-4-4 4"></path>
+                                </svg>
+                            </div>
+                            <p class="profile-dropzone-text">Drag &amp; drop your resume here or</p>
+                            <span class="profile-choose-file-btn">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                                <span>Choose PDF File</span>
+                            </span>
+                            <p class="profile-dropzone-subtext">Only PDF files are supported. Max size: 5MB</p>
+
+                            <!-- Selected File Badge -->
+                            <div class="profile-selected-file-badge" id="profile-file-badge">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span id="profile-file-name-text">filename.pdf</span>
+                            </div>
+
+                            <input type="file" name="resume" id="profile-resume-input" accept=".pdf,application/pdf" style="display: none;" required>
+                        </div>
+
+                        <!-- Update Resume Button -->
+                        <div style="margin-top: 6px;">
+                            <button type="submit" class="profile-btn-gradient" id="btn-update-resume">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span>Update Resume</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 SECTION 4: CONTACT US (CANONICAL GLOBAL STANDARD)
+                 ============================================================ -->
+            {% include 'partials/contact_section.html' %}
+
+        </div>
+    </main>
+
+    <!-- ============================================================
+         SECTION 6: FLOATING GLASS BOTTOM NAVIGATION (5 Items, Profile Active)
+         ============================================================ -->
+    <nav class="bottom-nav-bar" aria-label="Secondary bottom navigation">
+        <div class="bottom-nav-inner glass-panel">
+            <a href="/jobs-home" class="bottom-nav-tab" aria-label="Jobs" title="Jobs">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Jobs</span>
+            </a>
+
+            <a href="/upload-resume" class="bottom-nav-tab" aria-label="Resume" title="Resume">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Resume</span>
+            </a>
+
+            <a href="/courses" class="bottom-nav-tab" aria-label="Courses" title="Courses">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Courses</span>
+            </a>
+
+            <a href="/profile" class="bottom-nav-tab active" aria-current="page" aria-label="Profile" title="Profile">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Profile</span>
+            </a>
+
+            <a href="/logout" class="bottom-nav-tab bottom-nav-logout-tab" data-logout-trigger="true" aria-label="Logout" title="Logout">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Logout</span>
+            </a>
+        </div>
+    </nav>
+</div>
+
+{% include 'partials/logout_modal.html' %}
+
+<!-- CLIENT JAVASCRIPT LOGIC -->
+<script src="{{ url_for('static', filename='js/skillbridge.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // 1. Password visibility toggle
+    document.querySelectorAll(".profile-pw-toggle").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var targetId = this.getAttribute("data-target");
+            var input = document.getElementById(targetId);
+            if (!input) return;
+            if (input.type === "password") {
+                input.type = "text";
+                this.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" y1="2" x2="22" y2="22"></line></svg>`;
+            } else {
+                input.type = "password";
+                this.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            }
+        });
+    });
+
+    // 2. Drag & Drop and File Picker for Resume
+    var dropzone = document.getElementById("profile-dropzone");
+    var fileInput = document.getElementById("profile-resume-input");
+    var fileBadge = document.getElementById("profile-file-badge");
+    var fileNameText = document.getElementById("profile-file-name-text");
+
+    if (dropzone && fileInput) {
+        dropzone.addEventListener("click", function () {
+            fileInput.click();
+        });
+
+        dropzone.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        dropzone.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            dropzone.classList.add("dragover");
+        });
+
+        ["dragleave", "dragend"].forEach(function (type) {
+            dropzone.addEventListener(type, function () {
+                dropzone.classList.remove("dragover");
+            });
+        });
+
+        dropzone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            dropzone.classList.remove("dragover");
+            if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                updateFileBadge(fileInput.files[0]);
+            }
+        });
+
+        fileInput.addEventListener("change", function () {
+            if (this.files && this.files.length > 0) {
+                updateFileBadge(this.files[0]);
+            }
+        });
+
+        function updateFileBadge(file) {
+            if (!file) return;
+            if (!file.name.toLowerCase().endsWith(".pdf")) {
+                alert("Please select a PDF file.");
+                fileInput.value = "";
+                if (fileBadge) fileBadge.style.display = "none";
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File size exceeds 5MB limit.");
+                fileInput.value = "";
+                if (fileBadge) fileBadge.style.display = "none";
+                return;
+            }
+            if (fileBadge && fileNameText) {
+                var sizeKb = Math.round(file.size / 1024);
+                fileNameText.textContent = file.name + " (" + sizeKb + " KB)";
+                fileBadge.style.display = "inline-flex";
+            }
+        }
+    }
+});
+</script>
+{% include "partials/ai_chatbot.html" %}
+<script src="{{ url_for('static', filename='js/ai_chatbot.js') }}"></script>
+</body>
+</html>

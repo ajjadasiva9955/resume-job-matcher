@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge.AI | ATS Resume Score</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/skillbridge-icon.png') }}">
+
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            document.documentElement.setAttribute("data-theme", saved || "light");
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chatbot.css') }}">
+</head>
+<body class="ats-score-page">
+<div class="sky-scene" aria-hidden="true">
+    <span class="moon"></span>
+    <span class="sun"></span>
+    <span class="planet planet-one"></span>
+    <span class="planet planet-two"></span>
+</div>
+<div class="ambient" aria-hidden="true">
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+
+<div class="app-shell">
+    <!-- TOP NAVBAR (MATCHING SPEC EXACT ORDER: SkillBridge.AI | Upload Resume | ATS Score [ACTIVE] | Contact | Logout | Theme) -->
+    <header class="navbar" aria-label="Primary navigation">
+        <div class="container">
+            <div class="nav-inner glass-nav">
+                <a class="brand" href="/" aria-label="SkillBridge.AI home">
+                    <span class="brand-mark navbar-logo-mark" aria-hidden="true">
+                        <img class="navbar-logo" src="{{ url_for('static', filename='images/skillbridge-icon.png') }}" alt="">
+                    </span>
+                    <span>SkillBridge.AI</span>
+                </a>
+
+                <div class="nav-actions">
+                    <nav class="nav-links" data-nav-links>
+                        <a class="nav-link" href="/upload-resume" aria-label="Upload Resume" title="Upload Resume">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;" aria-hidden="true">
+                                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                                <path d="M12 12v9"></path>
+                                <path d="m16 16-4-4-4 4"></path>
+                            </svg>
+                            <span class="nav-label-desktop">Upload Resume</span>
+                            <span class="nav-label-mobile">Upload</span>
+                        </a>
+                        <a class="nav-link active" href="/ats-score" aria-current="page" aria-label="ATS Score" title="ATS Score">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="m10 15 5-3-5-3v6Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <span>ATS Score</span>
+                        </a>
+                        <a class="nav-link" href="#contact" aria-label="Contact" title="Contact">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;" aria-hidden="true">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                            <span>Contact</span>
+                        </a>
+                    </nav>
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-icon sun-label">Sun</span>
+                            <span class="theme-icon moon-label">Moon</span>
+                        </span>
+                    </button>
+                    <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu" aria-expanded="false">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="section ats-dashboard-section" style="padding-top: 24px; padding-bottom: 32px;">
+        <div class="container ats-main-container">
+
+            <!-- FLASH MESSAGES -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-stack" role="alert" style="margin-bottom: 20px;">
+                        {% for category, message in messages %}
+                            <div class="flash-alert flash-{{ category }}">
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% if ats_data %}
+            <!-- ============================================================
+                 SECTION 1: ATS RESUME SCORE HERO
+                 ============================================================ -->
+            <section class="ats-score-hero-panel glass-panel reveal-up" aria-labelledby="ats-score-heading">
+                <div class="ats-hero-grid">
+                    
+                    <!-- LEFT COLUMN: TITLE, DESC, RESUME CARD -->
+                    <div class="ats-hero-info">
+                        <span class="badge ats-badge">ATS RESUME SCORE</span>
+                        <h1 id="ats-score-heading" class="ats-score-title">ATS Resume Compatibility Score &mdash; {{ ats_data.final_score }}/100</h1>
+                        <p class="ats-score-desc">
+                            {{ ats_data.disclaimer }}
+                        </p>
+
+                        <!-- LATEST ATS RESUME CARD -->
+                        <div class="ats-file-card">
+                            <div class="ats-file-card-left">
+                                <div class="ats-file-icon {% if ats_data.file_type == 'docx' %}icon-docx{% else %}icon-pdf{% endif %}" aria-hidden="true">
+                                    {% if ats_data.file_type == 'docx' %}
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                    <span class="ats-file-tag">DOCX</span>
+                                    {% else %}
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                    <span class="ats-file-tag">PDF</span>
+                                    {% endif %}
+                                </div>
+                                <div class="ats-file-details">
+                                    <div class="ats-file-name" title="{{ ats_data.filename }}">{{ ats_data.filename }}</div>
+                                    <div class="ats-file-meta">
+                                        Uploaded on {{ ats_data.uploaded_at | format_date }} &bull; {{ ats_data.file_size | format_size }}
+                                    </div>
+                                    <div class="ats-file-status-badge">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                        <span>Analysis Completed</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="/download-ats-resume" class="ats-download-action-btn" aria-label="Download analyzed resume">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>Download</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- CENTER COLUMN: CIRCULAR SCORE INDICATOR -->
+                    <div class="ats-score-center">
+                        <div class="ats-score-circle-wrapper">
+                            <!-- SVG Gauge Ring -->
+                            <svg class="ats-score-gauge-svg" width="180" height="180" viewBox="0 0 180 180" aria-label="ATS Score {{ ats_data.final_score }} out of 100">
+                                <circle class="ats-gauge-bg" cx="90" cy="90" r="74" />
+                                <circle class="ats-gauge-progress" cx="90" cy="90" r="74" 
+                                        stroke-dasharray="465"
+                                        stroke-dashoffset="{{ 465 - (465 * ats_data.final_score / 100) }}" />
+                            </svg>
+                            <div class="ats-score-gauge-text">
+                                <span class="ats-score-gauge-num">{{ ats_data.final_score }}</span>
+                                <span class="ats-score-gauge-denom">/100</span>
+                            </div>
+                        </div>
+                        <div class="ats-score-status-title">{{ ats_data.score_status }}</div>
+                        <p class="ats-score-disclaimer">
+                            ATS Resume Compatibility Score &mdash; {{ ats_data.final_score }}/100<br>
+                            <span style="font-size: 11px; opacity: 0.85; line-height: 1.35; display: inline-block; margin-top: 4px;">Evaluates structure, readability, content, skills, projects, completeness, quantification &amp; consistency. Not a probability of getting shortlisted.</span>
+                        </p>
+                    </div>
+
+                    <!-- RIGHT COLUMN: 7-FACTOR SCORE SUMMARY -->
+                    <div class="ats-hero-metrics">
+                        <div class="ats-mini-metric">
+                            <div class="ats-mini-metric-header">
+                                <span class="ats-mini-metric-label">ATS Readability / Format <small>(25%)</small></span>
+                                <span class="ats-mini-metric-val">{{ ats_data.scores.ats_readability }}/100</span>
+                            </div>
+                            <div class="ats-mini-bar-track">
+                                <div class="ats-mini-bar-fill fill-purple" style="width: {{ ats_data.scores.ats_readability }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="ats-mini-metric">
+                            <div class="ats-mini-metric-header">
+                                <span class="ats-mini-metric-label">Content Quality <small>(20%)</small></span>
+                                <span class="ats-mini-metric-val">{{ ats_data.scores.content_quality }}/100</span>
+                            </div>
+                            <div class="ats-mini-bar-track">
+                                <div class="ats-mini-bar-fill fill-green" style="width: {{ ats_data.scores.content_quality }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="ats-mini-metric">
+                            <div class="ats-mini-metric-header">
+                                <span class="ats-mini-metric-label">Skills Depth &amp; Taxonomy <small>(15%)</small></span>
+                                <span class="ats-mini-metric-val">{{ ats_data.scores.skills }}/100</span>
+                            </div>
+                            <div class="ats-mini-bar-track">
+                                <div class="ats-mini-bar-fill fill-teal" style="width: {{ ats_data.scores.skills }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="ats-mini-metric">
+                            <div class="ats-mini-metric-header">
+                                <span class="ats-mini-metric-label">Resume Completeness <small>(15%)</small></span>
+                                <span class="ats-mini-metric-val">{{ ats_data.scores.completeness }}/100</span>
+                            </div>
+                            <div class="ats-mini-bar-track">
+                                <div class="ats-mini-bar-fill fill-blue" style="width: {{ ats_data.scores.completeness }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="ats-mini-metric">
+                            <div class="ats-mini-metric-header">
+                                <span class="ats-mini-metric-label">Experience / Projects <small>(10%)</small></span>
+                                <span class="ats-mini-metric-val">{{ ats_data.scores.experience_projects }}/100</span>
+                            </div>
+                            <div class="ats-mini-bar-track">
+                                <div class="ats-mini-bar-fill fill-orange" style="width: {{ ats_data.scores.experience_projects }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="ats-mini-metric">
+                            <div class="ats-mini-metric-header">
+                                <span class="ats-mini-metric-label">Grammar &amp; Consistency <small>(10%)</small></span>
+                                <span class="ats-mini-metric-val">{{ ats_data.scores.grammar_consistency }}/100</span>
+                            </div>
+                            <div class="ats-mini-bar-track">
+                                <div class="ats-mini-bar-fill fill-indigo" style="width: {{ ats_data.scores.grammar_consistency }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="ats-mini-metric">
+                            <div class="ats-mini-metric-header">
+                                <span class="ats-mini-metric-label">Quantification <small>(5%)</small></span>
+                                <span class="ats-mini-metric-val">{{ ats_data.scores.quantification }}/100</span>
+                            </div>
+                            <div class="ats-mini-bar-track">
+                                <div class="ats-mini-bar-fill fill-green" style="width: {{ ats_data.scores.quantification }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 SECTION 2: DETAILED RESUME ANALYSIS (3-COLUMN SECTION)
+                 ============================================================ -->
+            <section class="ats-details-section glass-panel reveal-up delay-1" aria-labelledby="detailed-analysis-title">
+                <div class="ats-section-heading-wrap">
+                    <span class="badge ats-subbadge">DETAILED ANALYSIS</span>
+                    <h2 id="detailed-analysis-title" class="ats-section-title">Resume Analysis</h2>
+                    <p class="ats-section-desc">Here's a breakdown of how your resume performed across key ATS factors.</p>
+                </div>
+
+                <div class="ats-analysis-grid">
+                    <!-- 1. STRENGTHS CARD -->
+                    <div class="ats-card-panel strengths-panel">
+                        <div class="ats-card-header">
+                            <div class="ats-card-icon icon-green" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                            </div>
+                            <h3 class="ats-card-title">Strengths</h3>
+                        </div>
+                        <ul class="ats-list-items">
+                            {% for strength in ats_data.strengths %}
+                            <li class="ats-list-item item-strength">
+                                <svg class="ats-bullet-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>{{ strength }}</span>
+                            </li>
+                            {% else %}
+                            <li class="ats-list-item item-strength">
+                                <svg class="ats-bullet-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>Standard text document format suitable for automated parsing.</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- 2. AREAS TO IMPROVE / PROBLEMS DETECTED CARD -->
+                    <div class="ats-card-panel areas-panel">
+                        <div class="ats-card-header">
+                            <div class="ats-card-icon icon-amber" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 2 22 22 22 12 2"></polygon>
+                                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                            </div>
+                            <h3 class="ats-card-title">Areas to Improve</h3>
+                        </div>
+                        <ul class="ats-list-items">
+                            {% for prob in ats_data.problems_detected %}
+                            <li class="ats-list-item item-improve">
+                                <svg class="ats-bullet-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>{{ prob }}</span>
+                            </li>
+                            {% else %}
+                            <li class="ats-list-item item-improve">
+                                <svg class="ats-bullet-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>Consider adding more quantifiable metrics to bullet points.</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- 3. INDUSTRY KEYWORD QUALITY CARD -->
+                    <div class="ats-card-panel keywords-panel">
+                        <div class="ats-card-header" style="justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="ats-card-icon icon-blue" aria-hidden="true">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                                        <line x1="9" y1="20" x2="15" y2="20"></line>
+                                        <line x1="12" y1="4" x2="12" y2="20"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="ats-card-title">Detected Industry Terminology</h3>
+                            </div>
+                            <span class="badge ats-domain-pill">{{ ats_data.primary_domain }}</span>
+                        </div>
+                        <p class="ats-card-desc-text">
+                            Evaluates industry terminology standard for your identified domain (<strong>{{ ats_data.primary_domain }}</strong>).
+                            {% if ats_data.secondary_domains %}
+                            <br><span style="font-size: 11.5px; opacity: 0.85;">Related Domains: {{ ats_data.secondary_domains | join(', ') }}</span>
+                            {% endif %}
+                        </p>
+
+                        <!-- DETECTED INDUSTRY TERMINOLOGY -->
+                        <div class="ats-kw-group">
+                            <div class="ats-kw-group-title text-green">Relevant Industry Terminology Present</div>
+                            <div class="ats-pill-wrap">
+                                {% for kw in ats_data.detected_industry_terminology or ats_data.top_matched_keywords %}
+                                <span class="ats-pill pill-match">{{ kw }}</span>
+                                {% else %}
+                                <span class="ats-pill pill-match">Core Tech Overlap</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- OPTIONAL INDUSTRY TERMINOLOGY SUGGESTIONS -->
+                        {% if ats_data.optional_industry_terminology_suggestions or ats_data.missing_keywords %}
+                        <div class="ats-kw-group" style="margin-top: 14px;">
+                            <div class="ats-kw-group-title text-red">Optional Industry Terminology Suggestions</div>
+                            <div class="ats-pill-wrap">
+                                {% for kw in ats_data.optional_industry_terminology_suggestions or ats_data.missing_keywords %}
+                                <span class="ats-pill pill-missing">{{ kw }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 SECTION 3 & 4: SCORE BREAKDOWN & RECOMMENDATIONS (2-COL)
+                 ============================================================ -->
+            <div class="ats-secondary-grid">
+                
+                <!-- SCORE BREAKDOWN CARD -->
+                <section class="ats-card-panel glass-panel reveal-up delay-2" aria-labelledby="breakdown-title">
+                    <div class="ats-card-header">
+                        <div class="ats-card-icon icon-purple" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                        </div>
+                        <h2 id="breakdown-title" class="ats-card-title">Score Breakdown</h2>
+                    </div>
+
+                    <div class="ats-breakdown-rows">
+                        <!-- 1. ATS Readability / Format (25%) -->
+                        <div class="ats-breakdown-item">
+                            <div class="ats-breakdown-header">
+                                <span class="ats-breakdown-name">ATS Readability / Format <small class="ats-weight-tag">(25% weight)</small></span>
+                                <span class="ats-breakdown-score">{{ ats_data.scores.ats_readability }}/100</span>
+                            </div>
+                            <div class="ats-progress-track">
+                                <div class="ats-progress-fill fill-purple" style="width: {{ ats_data.scores.ats_readability }}%;"></div>
+                            </div>
+                            {% if ats_data.evidence and (ats_data.evidence.ats_readability or ats_data.evidence.readability) %}
+                            {% set r_ev = ats_data.evidence.ats_readability or ats_data.evidence.readability %}
+                            <div class="ats-cat-details">
+                                {% for ev in r_ev.evidence %}
+                                <div class="ats-cat-ev-item text-green-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>{{ ev }}</span>
+                                </div>
+                                {% endfor %}
+                                {% for ded in r_ev.deductions %}
+                                <div class="ats-cat-ev-item text-amber-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span>{{ ded }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 2. Content Quality (20%) -->
+                        <div class="ats-breakdown-item">
+                            <div class="ats-breakdown-header">
+                                <span class="ats-breakdown-name">Content Quality <small class="ats-weight-tag">(20% weight)</small></span>
+                                <span class="ats-breakdown-score">{{ ats_data.scores.content_quality }}/100</span>
+                            </div>
+                            <div class="ats-progress-track">
+                                <div class="ats-progress-fill fill-green" style="width: {{ ats_data.scores.content_quality }}%;"></div>
+                            </div>
+                            {% if ats_data.evidence and ats_data.evidence.content_quality %}
+                            <div class="ats-cat-details">
+                                {% for ev in ats_data.evidence.content_quality.evidence %}
+                                <div class="ats-cat-ev-item text-green-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>{{ ev }}</span>
+                                </div>
+                                {% endfor %}
+                                {% for ded in ats_data.evidence.content_quality.deductions %}
+                                <div class="ats-cat-ev-item text-amber-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span>{{ ded }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 3. Skills Depth & Taxonomy (15%) -->
+                        <div class="ats-breakdown-item">
+                            <div class="ats-breakdown-header">
+                                <span class="ats-breakdown-name">Skills Depth &amp; Taxonomy <small class="ats-weight-tag">(15% weight)</small></span>
+                                <span class="ats-breakdown-score">{{ ats_data.scores.skills }}/100</span>
+                            </div>
+                            <div class="ats-progress-track">
+                                <div class="ats-progress-fill fill-teal" style="width: {{ ats_data.scores.skills }}%;"></div>
+                            </div>
+                            {% if ats_data.evidence and (ats_data.evidence.skills or ats_data.evidence.skills_analysis) %}
+                            {% set s_ev = ats_data.evidence.skills or ats_data.evidence.skills_analysis %}
+                            <div class="ats-cat-details">
+                                {% for ev in s_ev.evidence %}
+                                <div class="ats-cat-ev-item text-green-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>{{ ev }}</span>
+                                </div>
+                                {% endfor %}
+                                {% for ded in s_ev.deductions %}
+                                <div class="ats-cat-ev-item text-amber-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span>{{ ded }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 4. Experience / Projects (10%) -->
+                        <div class="ats-breakdown-item">
+                            <div class="ats-breakdown-header">
+                                <span class="ats-breakdown-name">Experience / Projects <small class="ats-weight-tag">(10% weight)</small></span>
+                                <span class="ats-breakdown-score">{{ ats_data.scores.experience_projects }}/100</span>
+                            </div>
+                            <div class="ats-progress-track">
+                                <div class="ats-progress-fill fill-orange" style="width: {{ ats_data.scores.experience_projects }}%;"></div>
+                            </div>
+                            {% if ats_data.evidence and ats_data.evidence.experience_projects %}
+                            <div class="ats-cat-details">
+                                {% for ev in ats_data.evidence.experience_projects.evidence %}
+                                <div class="ats-cat-ev-item text-green-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>{{ ev }}</span>
+                                </div>
+                                {% endfor %}
+                                {% for ded in ats_data.evidence.experience_projects.deductions %}
+                                <div class="ats-cat-ev-item text-amber-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span>{{ ded }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 5. Resume Completeness (15%) -->
+                        <div class="ats-breakdown-item">
+                            <div class="ats-breakdown-header">
+                                <span class="ats-breakdown-name">Resume Completeness <small class="ats-weight-tag">(15% weight)</small></span>
+                                <span class="ats-breakdown-score">{{ ats_data.scores.completeness }}/100</span>
+                            </div>
+                            <div class="ats-progress-track">
+                                <div class="ats-progress-fill fill-blue" style="width: {{ ats_data.scores.completeness }}%;"></div>
+                            </div>
+                            {% if ats_data.evidence and ats_data.evidence.completeness %}
+                            <div class="ats-cat-details">
+                                {% for ev in ats_data.evidence.completeness.evidence %}
+                                <div class="ats-cat-ev-item text-green-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>{{ ev }}</span>
+                                </div>
+                                {% endfor %}
+                                {% for ded in ats_data.evidence.completeness.deductions %}
+                                <div class="ats-cat-ev-item text-amber-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span>{{ ded }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 6. Quantification (5%) -->
+                        <div class="ats-breakdown-item">
+                            <div class="ats-breakdown-header">
+                                <span class="ats-breakdown-name">Quantification <small class="ats-weight-tag">(5% weight)</small></span>
+                                <span class="ats-breakdown-score">{{ ats_data.scores.quantification }}/100</span>
+                            </div>
+                            <div class="ats-progress-track">
+                                <div class="ats-progress-fill fill-green" style="width: {{ ats_data.scores.quantification }}%;"></div>
+                            </div>
+                            {% if ats_data.evidence and ats_data.evidence.quantification %}
+                            <div class="ats-cat-details">
+                                {% for ev in ats_data.evidence.quantification.evidence %}
+                                <div class="ats-cat-ev-item text-green-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>{{ ev }}</span>
+                                </div>
+                                {% endfor %}
+                                {% for ded in ats_data.evidence.quantification.deductions %}
+                                <div class="ats-cat-ev-item text-amber-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span>{{ ded }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 7. Grammar & Consistency (10%) -->
+                        <div class="ats-breakdown-item">
+                            <div class="ats-breakdown-header">
+                                <span class="ats-breakdown-name">Grammar &amp; Consistency <small class="ats-weight-tag">(10% weight)</small></span>
+                                <span class="ats-breakdown-score">{{ ats_data.scores.grammar_consistency }}/100</span>
+                            </div>
+                            <div class="ats-progress-track">
+                                <div class="ats-progress-fill fill-indigo" style="width: {{ ats_data.scores.grammar_consistency }}%;"></div>
+                            </div>
+                            {% if ats_data.evidence and ats_data.evidence.grammar_consistency %}
+                            <div class="ats-cat-details">
+                                {% for ev in ats_data.evidence.grammar_consistency.evidence %}
+                                <div class="ats-cat-ev-item text-green-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>{{ ev }}</span>
+                                </div>
+                                {% endfor %}
+                                {% for ded in ats_data.evidence.grammar_consistency.deductions %}
+                                <div class="ats-cat-ev-item text-amber-item">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    <span>{{ ded }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- RECOMMENDATIONS CARD -->
+                <section class="ats-card-panel glass-panel reveal-up delay-2" aria-labelledby="recommendations-title">
+                    <div class="ats-card-header">
+                        <div class="ats-card-icon icon-indigo" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </div>
+                        <h2 id="recommendations-title" class="ats-card-title">Recommendations</h2>
+                    </div>
+
+                    <div class="ats-recommendations-list">
+                        {% for rec in ats_data.recommendations %}
+                        <div class="ats-rec-card priority-{{ rec.priority | lower }}">
+                            <div class="ats-rec-badge-wrap" style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+                                <span class="ats-priority-tag tag-{{ rec.priority | lower }}">{{ rec.priority }} Priority</span>
+                                {% if rec.section %}
+                                <span class="badge ats-domain-pill" style="font-size: 11px; padding: 2px 8px;">{{ rec.section }}</span>
+                                {% endif %}
+                            </div>
+                            <h3 class="ats-rec-title">{{ rec.title }}</h3>
+                            {% if rec.source_text %}
+                            <div class="ats-rec-source" style="font-size: 12px; font-style: italic; color: var(--text-muted); background: rgba(0,0,0,0.03); padding: 4px 8px; border-left: 3px solid var(--border-color); margin: 6px 0 8px; border-radius: 2px;">
+                                Source: &ldquo;{{ rec.source_text }}&rdquo;
+                            </div>
+                            {% endif %}
+                            <p class="ats-rec-desc">{{ rec.desc }}</p>
+                        </div>
+                        {% else %}
+                        <div class="ats-rec-card priority-low">
+                            <h3 class="ats-rec-title">Maintain Clear Formatting</h3>
+                            <p class="ats-rec-desc">Regularly review dates and bullet points for consistent active voice.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+            <!-- ============================================================
+                 SECTION 5: ACTION VERBS & PHRASING ANALYTICS
+                 ============================================================ -->
+            {% if ats_data.action_verb_analysis %}
+            {% set av = ats_data.action_verb_analysis %}
+            <section class="ats-card-panel glass-panel reveal-up delay-2" style="margin-top: 22px;">
+                <div class="ats-card-header">
+                    <div class="ats-card-icon icon-green" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h2 class="ats-card-title">Action Verbs &amp; Execution Analytics</h2>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 8px;">
+                    <div style="background: rgba(0,0,0,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px 16px;">
+                        <div style="font-size: 11.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Total Bullets</div>
+                        <div style="font-size: 24px; font-weight: 900; color: var(--text-primary); margin-top: 4px;">{{ av.total_bullets }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">In Projects &amp; Experience</div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px 16px;">
+                        <div style="font-size: 11.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Action-Led Ratio</div>
+                        <div style="font-size: 24px; font-weight: 900; color: #16a34a; margin-top: 4px;">{{ av.action_led_ratio_str }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{{ av.action_led_count }} of {{ av.total_bullets }} action-started</div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px 16px;">
+                        <div style="font-size: 11.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Unique Action Verbs</div>
+                        <div style="font-size: 24px; font-weight: 900; color: #3b82f6; margin-top: 4px;">{{ av.unique_action_verbs_count }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Distinct power verbs used</div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px 16px;">
+                        <div style="font-size: 11.5px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Weak Openings</div>
+                        <div style="font-size: 24px; font-weight: 900; color: {% if av.weak_opening_count == 0 %}#16a34a{% else %}#f59e0b{% endif %}; margin-top: 4px;">{{ av.weak_opening_count }}</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{% if av.weak_opening_count == 0 %}Zero passive openings{% else %}Passive phrases found{% endif %}</div>
+                    </div>
+                </div>
+
+                {% if av.unique_action_verbs %}
+                <div style="margin-top: 14px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">Action Verbs Detected in Resume:</div>
+                    <div class="ats-pill-wrap">
+                        {% for verb in av.unique_action_verbs %}
+                        <span class="ats-pill pill-match" style="font-weight: 600;">{{ verb }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+            {% endif %}
+
+            <!-- ============================================================
+                 SECTION 6: FOUR-STATE SKILLS CROSS-VALIDATION
+                 ============================================================ -->
+            {% if ats_data.state_a or ats_data.state_d or ats_data.state_b or ats_data.state_c or ats_data.demonstrated_and_listed %}
+            <section class="ats-card-panel glass-panel reveal-up delay-3" style="margin-top: 22px;">
+                <div class="ats-card-header">
+                    <div class="ats-card-icon icon-teal" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d9488" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </div>
+                    <h2 class="ats-card-title">Skills Cross-Validation &amp; Direct Evidence (4-State Inventory)</h2>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 8px;">
+                    <!-- STATE A: Listed + Directly Demonstrated -->
+                    <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #16a34a; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>State A: Listed + Directly Demonstrated ({{ (ats_data.state_a or ats_data.demonstrated_and_listed) | length }})</span>
+                        </div>
+                        <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 8px;">Supported by direct project bullets, project tech lists, or role experience.</p>
+                        <div class="ats-pill-wrap">
+                            {% for s in (ats_data.state_a or ats_data.demonstrated_and_listed) %}
+                            <span class="ats-pill pill-match">{{ s }}</span>
+                            {% else %}
+                            <span style="font-size: 12px; color: var(--text-muted);">None detected</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- STATE D: Listed + Indirectly Supported -->
+                    <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #6366f1; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>State D: Listed + Indirectly Supported ({{ (ats_data.state_d or ats_data.listed_indirectly_supported) | length }})</span>
+                        </div>
+                        <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 8px;">Supported by repository links (e.g. GitHub for Git) or architectural context.</p>
+                        <div class="ats-pill-wrap">
+                            {% for s in (ats_data.state_d or ats_data.listed_indirectly_supported) %}
+                            <span class="ats-pill" style="background: rgba(99, 102, 241, 0.12); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.3);">{{ s }}</span>
+                            {% else %}
+                            <span style="font-size: 12px; color: var(--text-muted);">None detected</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- STATE B: Listed + Not Demonstrated -->
+                    <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #f59e0b; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            <span>State B: Listed + Not Demonstrated ({{ (ats_data.state_b or ats_data.listed_not_demonstrated) | length }})</span>
+                        </div>
+                        <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 8px;">Listed in Technical Skills, but no direct evidence found in this resume.</p>
+                        <div class="ats-pill-wrap">
+                            {% for s in (ats_data.state_b or ats_data.listed_not_demonstrated) %}
+                            <span class="ats-pill" style="background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3);">{{ s }}</span>
+                            {% else %}
+                            <span style="font-size: 12px; color: #16a34a;">All listed skills have direct or indirect evidence</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- STATE C: Demonstrated + Not Listed -->
+                    {% if ats_data.state_c or ats_data.demonstrated_not_listed %}
+                    <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px;">
+                        <div style="font-size: 13px; font-weight: 800; color: #3b82f6; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>State C: Demonstrated + Not Listed ({{ (ats_data.state_c or ats_data.demonstrated_not_listed) | length }})</span>
+                        </div>
+                        <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 8px;">Used in projects/experience but missing from Technical Skills section.</p>
+                        <div class="ats-pill-wrap">
+                            {% for s in (ats_data.state_c or ats_data.demonstrated_not_listed) %}
+                            <span class="ats-pill" style="background: rgba(59, 130, 246, 0.12); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3);">{{ s }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- ============================================================
+                 SECTION 7: QUANTIFICATION & EXCLUSION AUDIT
+                 ============================================================ -->
+            {% if ats_data.quantification_breakdown or ats_data.excluded_numbers %}
+            <section class="ats-card-panel glass-panel reveal-up delay-3" style="margin-top: 22px;">
+                <div class="ats-card-header">
+                    <div class="ats-card-icon icon-green" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="20" x2="12" y2="10"></line>
+                            <line x1="18" y1="20" x2="18" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="16"></line>
+                        </svg>
+                    </div>
+                    <h2 class="ats-card-title">Quantification &amp; Numeric Audit Breakdown</h2>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 8px;">
+                    <!-- Accepted Metric Categories -->
+                    <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px;">
+                        <h3 style="font-size: 13.5px; font-weight: 800; color: #16a34a; margin: 0 0 10px; display: flex; align-items: center; gap: 6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Accepted Measurable Metrics (8 Categories)</span>
+                        </h3>
+                        <ul style="list-style: none; padding: 0; margin: 0; font-size: 12.5px; line-height: 1.6;">
+                            {% for cat_k, cat_vals in ats_data.quantification_breakdown.items() %}
+                            <li style="margin-bottom: 6px;">
+                                <strong>{{ cat_k | replace('_', ' ') | title }}:</strong>
+                                {% if cat_vals %}
+                                <span class="text-green" style="font-weight: 600;">{{ cat_vals | join(', ') }}</span>
+                                {% else %}
+                                <span style="color: var(--text-muted);">None detected</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- Excluded Numbers Audit -->
+                    <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 16px;">
+                        <h3 style="font-size: 13.5px; font-weight: 800; color: var(--text-muted); margin: 0 0 10px; display: flex; align-items: center; gap: 6px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                            <span>Excluded Non-Achievement Numbers Audit</span>
+                        </h3>
+                        <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 8px;">Non-achievement numbers filtered from metric calculation:</p>
+                        <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px; line-height: 1.5;">
+                            {% for ex_k, ex_list in ats_data.excluded_numbers.items() %}
+                            {% if ex_list %}
+                            <li style="margin-bottom: 5px;">
+                                <strong>{{ ex_k | replace('_', ' ') | title }} ({{ ex_list | length }}):</strong>
+                                <span style="color: var(--text-muted);">{{ ex_list[0].reason }}</span>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- ============================================================
+                 SECTION 8: PROJECT-BY-PROJECT DEEP ANALYSIS & BULLET DIAGNOSTICS
+                 ============================================================ -->
+            {% if ats_data.projects_analysis %}
+            <section class="ats-card-panel glass-panel reveal-up delay-3" style="margin-top: 22px;">
+                <div class="ats-card-header">
+                    <div class="ats-card-icon icon-purple" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                    </div>
+                    <h2 class="ats-card-title">Project-by-Project Deep Analysis &amp; Bullet Diagnostics</h2>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 8px;">
+                    {% for proj in ats_data.projects_analysis %}
+                    <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: 14px; padding: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0 0 6px;">{{ proj.project_name }}</h3>
+                                {% if proj.technologies_used %}
+                                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">
+                                    <strong>Technologies Used:</strong> {{ proj.technologies_used | join(', ') }}
+                                </div>
+                                {% endif %}
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    {% for t in proj.technologies %}
+                                    <span class="ats-pill pill-match" style="font-size: 11px; padding: 2px 7px;">{{ t }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <span class="badge" style="font-size: 11px; padding: 3px 8px; background: rgba(99, 102, 241, 0.12); color: #6366f1;">{{ proj.bullet_count }} Bullet{{ 's' if proj.bullet_count != 1 else '' }}</span>
+                                {% if proj.has_metrics %}
+                                <span class="badge" style="font-size: 11px; padding: 3px 8px; background: rgba(16, 185, 129, 0.12); color: #16a34a;">Quantified</span>
+                                {% else %}
+                                <span class="badge" style="font-size: 11px; padding: 3px 8px; background: rgba(245, 158, 11, 0.12); color: #f59e0b;">No Metrics</span>
+                                {% endif %}
+                                {% if proj.link_status.has_live_demo_label or proj.link_status.has_github_label %}
+                                <span class="badge" style="font-size: 11px; padding: 3px 8px; background: rgba(59, 130, 246, 0.12); color: #2563eb;">Links Present</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 12px; font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                            <strong>Technical Depth:</strong> {{ proj.technical_depth }}<br>
+                            <strong>Outcome &amp; Metrics:</strong> {{ proj.result_impact }}
+                        </div>
+
+                        <!-- BULLET-BY-BULLET 6-CRITERIA DIAGNOSTICS -->
+                        {% if proj.bullet_analysis %}
+                        <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 10px;">
+                            <h4 style="font-size: 12.5px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; margin: 0;">Bullet Diagnostics</h4>
+                            {% for b_diag in proj.bullet_analysis %}
+                            <div style="background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; font-size: 12.5px;">
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">&bull; &ldquo;{{ b_diag.text }}&rdquo;</div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; font-size: 11px;">
+                                    <span class="badge" style="background: {% if b_diag.action.status == 'PASS' %}rgba(16, 185, 129, 0.15); color: #16a34a{% else %}rgba(245, 158, 11, 0.15); color: #d97706{% endif %};">Action: {{ b_diag.action.status }}</span>
+                                    <span class="badge" style="background: {% if b_diag.task.status == 'PASS' %}rgba(16, 185, 129, 0.15); color: #16a34a{% else %}rgba(245, 158, 11, 0.15); color: #d97706{% endif %};">Task: {{ b_diag.task.status }}</span>
+                                    <span class="badge" style="background: {% if b_diag.technology.status == 'PASS' %}rgba(16, 185, 129, 0.15); color: #16a34a{% else %}rgba(245, 158, 11, 0.15); color: #d97706{% endif %};">Tech: {{ b_diag.technology.status }}</span>
+                                    <span class="badge" style="background: {% if b_diag.result.status == 'PASS' %}rgba(16, 185, 129, 0.15); color: #16a34a{% else %}rgba(245, 158, 11, 0.15); color: #d97706{% endif %};">Result: {{ b_diag.result.status }}</span>
+                                    <span class="badge" style="background: {% if b_diag.metric.status == 'PASS' %}rgba(16, 185, 129, 0.15); color: #16a34a{% else %}rgba(245, 158, 11, 0.15); color: #d97706{% endif %};">Metric: {{ b_diag.metric.status }}</span>
+                                    <span class="badge" style="background: {% if b_diag.clarity.status == 'PASS' %}rgba(16, 185, 129, 0.15); color: #16a34a{% else %}rgba(245, 158, 11, 0.15); color: #d97706{% endif %};">Clarity: {{ b_diag.clarity.status }}</span>
+                                </div>
+                                <div style="font-size: 11.5px; color: var(--text-muted); font-style: italic;">
+                                    <strong>Recommendation:</strong> {{ b_diag.recommendation }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        {% if proj.recommendations %}
+                        <div style="margin-top: 10px; background: rgba(245, 158, 11, 0.06); border-left: 3px solid #f59e0b; padding: 6px 10px; border-radius: 4px; font-size: 12.5px; color: var(--text-primary);">
+                            <strong>Project Recommendation:</strong> {{ proj.recommendations | join(' ') }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- WEAK BULLETS & ACTIONABLE OPTIMIZATIONS -->
+            {% if ats_data.bullet_optimizations or ats_data.weak_bullets %}
+            <section class="ats-card-panel glass-panel reveal-up delay-3" style="margin-top: 22px;">
+                <div class="ats-card-header">
+                    <div class="ats-card-icon icon-amber" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="ats-card-title">Actionable Bullet Point Optimization</h2>
+                </div>
+                <div class="ats-bullets-grid">
+                    {% for wb in (ats_data.bullet_optimizations or ats_data.weak_bullets)[:4] %}
+                    <div class="ats-weak-bullet-box">
+                        <div class="ats-wb-row">
+                            <span class="ats-wb-label">Original:</span>
+                            <span class="ats-wb-text">&ldquo;{{ wb.original }}&rdquo;</span>
+                        </div>
+                        <div class="ats-wb-row">
+                            <span class="ats-wb-label text-amber">Problem:</span>
+                            <span class="ats-wb-text">{{ wb.problem }}</span>
+                        </div>
+                        <div class="ats-wb-row">
+                            <span class="ats-wb-label text-green">Suggested Action:</span>
+                            <span class="ats-wb-text">{{ wb.suggestion }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- BOTTOM STATUS & CTA BANNER -->
+            <div class="ats-footer-banner glass-panel reveal-up delay-3">
+                <div class="ats-footer-banner-left">
+                    <div class="ats-check-circle" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <span>{{ ats_data.disclaimer }}</span>
+                </div>
+                <div class="ats-footer-actions">
+                    <a href="/upload-resume" class="btn btn-outline" style="font-size: 13.5px; padding: 8px 18px;">
+                        Analyze Another Resume
+                    </a>
+                    <a href="/download-ats-resume" class="btn btn-primary" style="font-size: 13.5px; padding: 8px 18px;">
+                        Download Stored ATS Resume
+                    </a>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- ============================================================
+                 EMPTY STATE (NO ATS ANALYSIS YET)
+                 ============================================================ -->
+            <div class="ats-empty-card glass-panel reveal-up" style="text-align: center; padding: 60px 24px; max-width: 680px; margin: 40px auto;">
+                <div class="ats-empty-icon-wrap" aria-hidden="true" style="width: 72px; height: 72px; border-radius: 50%; background: rgba(99, 102, 241, 0.12); color: #6366f1; display: grid; place-items: center; margin: 0 auto 20px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <h2 style="font-size: 24px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">No ATS analysis available yet.</h2>
+                <p style="font-size: 14.5px; color: var(--text-muted); max-width: 480px; margin: 0 auto 24px;">
+                    Upload your resume in PDF or DOCX format to get your instant ATS score, format review, and in-depth optimization suggestions.
+                </p>
+                <a href="/upload-resume" class="btn btn-primary" style="padding: 12px 28px; font-weight: 700;">
+                    Upload Resume
+                </a>
+            </div>
+            {% endif %}
+
+        </div>
+    </main>
+
+    <!-- CANONICAL CONTACT US SECTION -->
+    <div class="container" style="padding-top: 10px; padding-bottom: 90px;">
+        {% include 'partials/contact_section.html' %}
+    </div>
+
+    <!-- BOTTOM FLOATING NAVIGATION BAR (5 Items, Resume Tab ACTIVE) -->
+    <nav class="bottom-nav-bar" aria-label="Secondary bottom navigation">
+        <div class="bottom-nav-inner glass-panel">
+            <a href="/jobs-home" class="bottom-nav-tab" aria-label="Jobs" title="Jobs">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Jobs</span>
+            </a>
+
+            <a href="/upload-resume" class="bottom-nav-tab active" aria-current="page" aria-label="Resume" title="Resume">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Resume</span>
+            </a>
+
+            <a href="/courses" class="bottom-nav-tab" aria-label="Courses" title="Courses">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Courses</span>
+            </a>
+
+            <a href="/profile" class="bottom-nav-tab" aria-label="Profile" title="Profile">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Profile</span>
+            </a>
+
+            <a href="/logout" class="bottom-nav-tab bottom-nav-logout-tab" data-logout-trigger="true" aria-label="Logout" title="Logout">
+                <span class="bottom-tab-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </span>
+                <span class="bottom-tab-label">Logout</span>
+            </a>
+        </div>
+    </nav>
+</div>
+
+{% include 'partials/logout_modal.html' %}
+
+<script src="{{ url_for('static', filename='js/skillbridge.js') }}"></script>
+{% include "partials/ai_chatbot.html" %}
+<script src="{{ url_for('static', filename='js/ai_chatbot.js') }}"></script>
+</body>
+</html>

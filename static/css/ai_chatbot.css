@@ -1,0 +1,1080 @@
+/* ==========================================================================
+   JARVIS AI CHATBOT STYLESHEET — SKILLBRIDGE.AI
+   Ultra-modern glassmorphic design native to SkillBridge.AI aesthetic system.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. FLOATING JARVIS TRIGGER BUTTON & TOOLTIP
+   -------------------------------------------------------------------------- */
+.jarvis-floating-trigger-wrap {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+
+.jarvis-floating-trigger-wrap.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.85);
+}
+
+.jarvis-floating-btn {
+    position: relative;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(139, 92, 246, 0.5);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.4));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 
+        0 8px 28px rgba(99, 102, 241, 0.4), 
+        0 2px 8px rgba(0, 0, 0, 0.2), 
+        inset 0 0 12px rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.jarvis-floating-btn:hover {
+    transform: translateY(-3px) scale(1.06);
+    border-color: rgba(168, 85, 247, 0.9);
+    box-shadow: 
+        0 12px 36px rgba(139, 92, 246, 0.6), 
+        0 4px 12px rgba(0, 0, 0, 0.25), 
+        inset 0 0 16px rgba(255, 255, 255, 0.4);
+}
+
+.jarvis-floating-btn:active {
+    transform: translateY(-1px) scale(0.97);
+}
+
+/* Pulsing ambient glowing ring */
+.jarvis-pulse-ring {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(139, 92, 246, 0.55);
+    animation: jarvisPulse 2.8s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    pointer-events: none;
+}
+
+@keyframes jarvisPulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.18);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+}
+
+.jarvis-avatar-orb {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.jarvis-btn-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.jarvis-floating-btn:hover .jarvis-btn-img {
+    transform: scale(1.08);
+}
+
+/* Green online dot */
+.jarvis-online-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: #10b981;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #10b981;
+}
+
+[data-theme="dark"] .jarvis-online-dot {
+    border-color: #0f172a;
+}
+
+/* Tooltip */
+.jarvis-tooltip-bubble {
+    position: absolute;
+    right: 70px;
+    background: rgba(15, 23, 42, 0.9);
+    color: #ffffff;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.jarvis-floating-trigger-wrap:hover .jarvis-tooltip-bubble {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+
+/* --------------------------------------------------------------------------
+   2. CHAT PANEL (PREMIUM FLOATING DESKTOP PANEL)
+   -------------------------------------------------------------------------- */
+.jarvis-chat-panel {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    width: 440px;
+    max-width: calc(100vw - 32px);
+    height: 88vh;
+    min-height: 620px;
+    max-height: 900px;
+    z-index: 10000;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0;
+    box-sizing: border-box;
+    
+    /* Unified 30%-50% Transparent Premium Glass Surface & Border */
+    border: 1px solid rgba(99, 102, 241, 0.28);
+    background: 
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.12), transparent 45%),
+        radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.08), rgba(168, 85, 247, 0.10), transparent 45%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.48) 0%, rgba(248, 250, 252, 0.42) 100%);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    
+    /* Sophisticated layered shadow & highlights */
+    box-shadow: 
+        0 20px 50px rgba(15, 23, 42, 0.12),
+        0 0 35px rgba(99, 102, 241, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+        
+    transform-origin: bottom right;
+    animation: jarvisPanelIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-theme="dark"] .jarvis-chat-panel {
+    background: 
+        radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 50%),
+        radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.10), rgba(168, 85, 247, 0.14), transparent 50%),
+        linear-gradient(165deg, rgba(10, 18, 42, 0.48) 0%, rgba(14, 24, 54, 0.44) 100%);
+    border-color: rgba(139, 92, 246, 0.38);
+    box-shadow: 
+        0 24px 60px rgba(0, 0, 0, 0.55),
+        0 0 35px rgba(99, 102, 241, 0.20),
+        0 0 15px rgba(168, 85, 247, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+@keyframes jarvisPanelIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.jarvis-chat-panel.is-closing {
+    animation: jarvisPanelOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes jarvisPanelOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+}
+
+
+/* --------------------------------------------------------------------------
+   3. CHAT HEADER (COMPACT & POLISHED)
+   -------------------------------------------------------------------------- */
+.jarvis-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.09), rgba(168, 85, 247, 0.14));
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    flex-shrink: 0;
+}
+
+[data-theme="dark"] .jarvis-header {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(168, 85, 247, 0.18));
+}
+
+.jarvis-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.jarvis-avatar-wrap {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(139, 92, 246, 0.6);
+    background: rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.jarvis-header-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.jarvis-header-status-dot {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 9px;
+    height: 9px;
+    background: #10b981;
+    border: 1.5px solid #ffffff;
+    border-radius: 50%;
+}
+
+[data-theme="dark"] .jarvis-header-status-dot {
+    border-color: #0f172a;
+}
+
+.jarvis-header-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.jarvis-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.jarvis-title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.jarvis-subtitle {
+    font-size: 11px;
+    color: var(--text-muted, #64748b);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.jarvis-header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Contact Button in Header */
+.jarvis-contact-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.jarvis-contact-btn:hover {
+    background: rgba(99, 102, 241, 0.22);
+    color: #4f46e5;
+    border-color: rgba(99, 102, 241, 0.55);
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .jarvis-contact-btn {
+    color: #a5b4fc;
+    background: rgba(99, 102, 241, 0.18);
+}
+
+.jarvis-close-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-muted, #64748b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .jarvis-close-btn {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.jarvis-close-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+
+/* --------------------------------------------------------------------------
+   4. CHAT BODY & MESSAGES
+   -------------------------------------------------------------------------- */
+.jarvis-body {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-behavior: smooth;
+}
+
+/* Custom Sleek Scrollbar */
+.jarvis-body::-webkit-scrollbar {
+    width: 5px;
+}
+.jarvis-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.jarvis-body::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 10px;
+}
+.jarvis-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+}
+
+.jarvis-msg-row {
+    display: flex;
+    gap: 9px;
+    max-width: 92%;
+    animation: jarvisMsgFade 0.22s ease forwards;
+}
+
+@keyframes jarvisMsgFade {
+    0% { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.jarvis-msg-assistant {
+    align-self: flex-start;
+}
+
+.jarvis-msg-user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.jarvis-msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.jarvis-msg-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.jarvis-msg-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.jarvis-msg-user .jarvis-msg-content {
+    align-items: flex-end;
+}
+
+/* Assistant Bubble */
+.jarvis-msg-assistant .jarvis-bubble {
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(139, 92, 246, 0.22);
+    color: var(--text-main, #1e293b);
+    border-radius: 16px 16px 16px 4px;
+    padding: 10px 13px;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    word-break: break-word;
+}
+
+[data-theme="dark"] .jarvis-msg-assistant .jarvis-bubble {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(139, 92, 246, 0.28);
+    color: #f1f5f9;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Welcome Bubble Specialized Styling */
+.jarvis-welcome-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.jarvis-welcome-header {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-main, #0f172a);
+}
+
+[data-theme="dark"] .jarvis-welcome-header {
+    color: #f8fafc;
+}
+
+.jarvis-user-name {
+    color: #6366f1;
+}
+
+[data-theme="dark"] .jarvis-user-name {
+    color: #a5b4fc;
+}
+
+.jarvis-welcome-text {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-secondary, #475569);
+    margin: 0;
+}
+
+[data-theme="dark"] .jarvis-welcome-text {
+    color: #cbd5e1;
+}
+
+.jarvis-brand-gradient {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+/* User Bubble */
+.jarvis-msg-user .jarvis-bubble {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff;
+    border-radius: 16px 16px 4px 16px;
+    padding: 9px 13px;
+    font-size: 13px;
+    line-height: 1.5;
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.32);
+    word-break: break-word;
+}
+
+.jarvis-bubble p {
+    margin: 0 0 6px 0;
+}
+.jarvis-bubble p:last-child {
+    margin-bottom: 0;
+}
+
+.jarvis-bubble ul, .jarvis-bubble ol {
+    margin: 4px 0 6px 16px;
+    padding: 0;
+}
+
+.jarvis-bubble li {
+    margin-bottom: 3px;
+}
+
+.jarvis-bubble h3, .jarvis-bubble h4 {
+    margin: 6px 0 4px 0;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.jarvis-bubble a {
+    color: #6366f1;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.jarvis-msg-user .jarvis-bubble a {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .jarvis-msg-assistant .jarvis-bubble a {
+    color: #a5b4fc;
+}
+
+.jarvis-bubble code {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-family: monospace;
+}
+
+[data-theme="dark"] .jarvis-bubble code {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.jarvis-bubble pre {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 8px 10px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 11.5px;
+    margin: 6px 0;
+}
+
+.jarvis-msg-time {
+    font-size: 10px;
+    color: var(--text-muted, #94a3b8);
+    margin-top: 1px;
+}
+
+
+/* --------------------------------------------------------------------------
+   5. SUGGESTION QUICK CHIPS
+   -------------------------------------------------------------------------- */
+.jarvis-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.jarvis-chip {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.28);
+    color: #6366f1;
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    line-height: 1.3;
+}
+
+[data-theme="dark"] .jarvis-chip {
+    background: rgba(99, 102, 241, 0.14);
+    color: #c7d2fe;
+    border-color: rgba(139, 92, 246, 0.35);
+}
+
+.jarvis-chip:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.25));
+    border-color: #8b5cf6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    color: #4f46e5;
+}
+
+[data-theme="dark"] .jarvis-chip:hover {
+    color: #ffffff;
+}
+
+
+/* --------------------------------------------------------------------------
+   6. TYPING INDICATOR
+   -------------------------------------------------------------------------- */
+.jarvis-typing-row {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    margin-top: 2px;
+}
+
+.jarvis-typing-bubble {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    border-radius: 16px 16px 16px 4px;
+    padding: 7px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+[data-theme="dark"] .jarvis-typing-bubble {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(139, 92, 246, 0.35);
+}
+
+.jarvis-typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.jarvis-typing-dots span {
+    width: 5px;
+    height: 5px;
+    background: #8b5cf6;
+    border-radius: 50%;
+    animation: jarvisDotBounce 1.4s infinite ease-in-out both;
+}
+
+.jarvis-typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.jarvis-typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+.jarvis-typing-dots span:nth-child(3) { animation-delay: 0; }
+
+@keyframes jarvisDotBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1.1); opacity: 1; }
+}
+
+.jarvis-typing-text {
+    font-size: 11px;
+    color: var(--text-muted, #64748b);
+    font-style: italic;
+}
+
+
+/* --------------------------------------------------------------------------
+   7. ATTACHMENT PREVIEW
+   -------------------------------------------------------------------------- */
+.jarvis-attachment-preview {
+    padding: 6px 14px;
+    background: rgba(139, 92, 246, 0.08);
+    border-top: 1px solid rgba(139, 92, 246, 0.15);
+    flex-shrink: 0;
+}
+
+.jarvis-attachment-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    padding: 3px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--text-main, #1e293b);
+}
+
+[data-theme="dark"] .jarvis-attachment-chip {
+    background: rgba(30, 41, 59, 0.9);
+    color: #f1f5f9;
+}
+
+.jarvis-attachment-remove {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 0 2px;
+}
+
+
+/* --------------------------------------------------------------------------
+   8. COMPOSER / INPUT FOOTER
+   -------------------------------------------------------------------------- */
+.jarvis-footer {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 10px 14px 8px 14px;
+    border-top: 1px solid rgba(139, 92, 246, 0.18);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.96));
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+[data-theme="dark"] .jarvis-footer {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.96));
+}
+
+.jarvis-composer-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jarvis-attach-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(139, 92, 246, 0.28);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted, #64748b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .jarvis-attach-btn {
+    background: rgba(30, 41, 59, 0.7);
+    color: #94a3b8;
+}
+
+.jarvis-attach-btn:hover {
+    color: #8b5cf6;
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.12);
+}
+
+.jarvis-input-wrap {
+    flex: 1;
+    position: relative;
+}
+
+.jarvis-textarea {
+    width: 100%;
+    min-height: 36px;
+    max-height: 90px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(139, 92, 246, 0.28);
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text-main, #1e293b);
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.4;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="dark"] .jarvis-textarea {
+    background: rgba(30, 41, 59, 0.85);
+    color: #f1f5f9;
+    border-color: rgba(139, 92, 246, 0.35);
+}
+
+.jarvis-textarea:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+.jarvis-send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
+    transition: all 0.2s ease;
+}
+
+.jarvis-send-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(139, 92, 246, 0.45);
+}
+
+.jarvis-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.jarvis-disclaimer {
+    font-size: 10px;
+    color: var(--text-muted, #94a3b8);
+    text-align: center;
+    margin: 2px 0 0 0;
+    line-height: 1.2;
+}
+
+
+/* --------------------------------------------------------------------------
+   9. MOBILE & TABLET RESPONSIVENESS (90% VIEWPORT HEIGHT & PREMIUM BORDER)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .jarvis-floating-trigger-wrap {
+        bottom: 84px; /* Clearance above mobile bottom navigation bar */
+        right: 16px;
+    }
+
+    .jarvis-floating-btn {
+        width: 52px;
+        height: 52px;
+    }
+
+    .jarvis-avatar-orb {
+        width: 38px;
+        height: 38px;
+    }
+
+    .jarvis-chat-panel {
+        top: 5vh;
+        top: 5dvh;
+        bottom: 5vh;
+        bottom: 5dvh;
+        right: 16px;
+        left: auto;
+        width: 420px;
+        max-width: calc(100vw - 32px);
+        height: 90vh;
+        height: 90dvh;
+        max-height: 90vh;
+        max-height: 90dvh;
+        min-height: auto;
+        border-radius: 22px;
+        z-index: 10005;
+        box-sizing: border-box;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35), 0 0 25px rgba(99, 102, 241, 0.15);
+    }
+
+    [data-theme="dark"] .jarvis-chat-panel {
+        border-color: rgba(139, 92, 246, 0.45);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.22);
+    }
+}
+
+@media (max-width: 480px) {
+    .jarvis-chat-panel {
+        top: 5vh;
+        top: 5dvh;
+        bottom: 5vh;
+        bottom: 5dvh;
+        right: 8px;
+        left: 8px;
+        margin: auto;
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        height: 90vh;
+        height: 90dvh;
+        max-height: 90vh;
+        max-height: 90dvh;
+        min-height: auto;
+        border-radius: 20px;
+        z-index: 10005;
+        box-sizing: border-box;
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 25px rgba(99, 102, 241, 0.18);
+    }
+
+    [data-theme="dark"] .jarvis-chat-panel {
+        border-color: rgba(139, 92, 246, 0.45);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 30px rgba(99, 102, 241, 0.25);
+    }
+
+    .jarvis-footer {
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+}
+
+
+/* --------------------------------------------------------------------------
+   10. CANONICAL CONTACT MODAL
+   -------------------------------------------------------------------------- */
+.jarvis-contact-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 10010;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.jarvis-contact-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.jarvis-contact-modal-card {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 0 30px rgba(139, 92, 246, 0.2);
+    z-index: 1;
+    animation: jarvisModalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-theme="dark"] .jarvis-contact-modal-card {
+    background: rgba(15, 23, 42, 0.96);
+    border-color: rgba(139, 92, 246, 0.45);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.25);
+}
+
+@keyframes jarvisModalPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.jarvis-contact-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    padding-bottom: 12px;
+}
+
+.jarvis-contact-modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+.jarvis-contact-modal-close {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--text-muted, #64748b);
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .jarvis-contact-modal-close {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.jarvis-contact-modal-close:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.jarvis-contact-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.jarvis-contact-greeting {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main, #0f172a);
+    margin: 0 0 4px 0;
+}
+
+[data-theme="dark"] .jarvis-contact-greeting {
+    color: #f8fafc;
+}
+
+.jarvis-contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.jarvis-contact-line {
+    margin: 0;
+    font-size: 14px;
+    word-break: break-all;
+}
+
+.jarvis-contact-link {
+    color: #6366f1;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.jarvis-contact-link:hover {
+    color: #8b5cf6;
+    text-decoration: underline;
+}
+
+[data-theme="dark"] .jarvis-contact-link {
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .jarvis-contact-link:hover {
+    color: #c7d2fe;
+}

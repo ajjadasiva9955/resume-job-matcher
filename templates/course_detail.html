@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge.AI | {{ course.title }} - Course Overview</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/skillbridge-icon.png') }}">
+
+    <script>
+        (function () {
+            var saved = localStorage.getItem("skillbridge-theme");
+            var light = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute("data-theme", saved || (light ? "light" : "dark"));
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/skillbridge.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chatbot.css') }}">
+</head>
+
+<body class="courses-page course-detail-page">
+    <div class="sky-scene" aria-hidden="true">
+        <span class="moon"></span>
+        <span class="sun"></span>
+        <span class="planet planet-one"></span>
+        <span class="planet planet-two"></span>
+    </div>
+    <div class="ambient" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="app-shell">
+        <!-- 1. TOP NAVBAR -->
+        <header class="navbar" aria-label="Primary navigation">
+            <div class="container">
+                <div class="nav-inner glass-nav">
+                    <a class="brand" href="/jobs-home" aria-label="SkillBridge.AI home">
+                        <span class="brand-mark navbar-logo-mark" aria-hidden="true">
+                            <img class="navbar-logo"
+                                src="{{ url_for('static', filename='images/skillbridge-icon.png') }}" alt="">
+                        </span>
+                        <span>SkillBridge.AI</span>
+                    </a>
+
+                    <div class="nav-actions">
+                        <nav class="nav-links" data-nav-links>
+                            <a class="nav-link" href="/courses" aria-label="All Courses" title="All Courses">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                                    <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                                </svg>
+                                <span>All Courses</span>
+                            </a>
+                            <a class="nav-link active" href="/courses/{{ course.id }}" aria-current="page" aria-label="Course Overview" title="Course Overview">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                                <span class="nav-label-desktop">Course Overview</span>
+                                <span class="nav-label-mobile">Overview</span>
+                            </a>
+                            <a class="nav-link" href="#contact" aria-label="Contact" title="Contact">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path
+                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                    </path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                                <span>Contact</span>
+                            </a>
+                        </nav>
+                        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                            <span class="theme-toggle-track" aria-hidden="true">
+                                <span class="theme-icon sun-label">Sun</span>
+                                <span class="theme-icon moon-label">Moon</span>
+                            </span>
+                        </button>
+                        <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation menu"
+                            aria-expanded="false">
+                            <span></span><span></span><span></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 2. MAIN LEARNING EXPERIENCE -->
+        <main class="section courses-main-section" style="padding-top: 20px; padding-bottom: 100px;">
+            <div class="container courses-page-container">
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-stack" role="alert" style="margin-bottom: 24px;">
+                    {% for category, message in messages %}
+                    <div class="flash-alert flash-{{ category }}">
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <!-- TOP COURSE HEADER / PROGRESS BOX (Matching Reference Design) -->
+                <section class="glass-panel course-header-progress-card reveal-up" aria-label="Course Header & Real Progress">
+                    <div class="course-header-progress-inner">
+                        <div class="course-header-icon-box"
+                            style="background: {{ course.accent_bg }}; border-color: {{ course.accent_border }}; color: {{ course.accent_color }};"
+                            aria-hidden="true">
+                            {% if course.icon_type == 'code' %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
+                            </svg>
+                            {% elif course.icon_type == 'terminal' %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="4 17 10 11 4 5"></polyline>
+                                <line x1="12" y1="19" x2="20" y2="19"></line>
+                            </svg>
+                            {% elif course.icon_type == 'layout' %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                            {% elif course.icon_type == 'server' %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                            </svg>
+                            {% elif course.icon_type == 'python' %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm0-8h-2V7h2v2zm4 8h-2v-4h2v4zm0-6h-2V7h2v4z">
+                                </path>
+                            </svg>
+                            {% elif course.icon_type == 'java' %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                                <line x1="6" y1="1" x2="6" y2="4"></line>
+                                <line x1="10" y1="1" x2="10" y2="4"></line>
+                                <line x1="14" y1="1" x2="14" y2="4"></line>
+                            </svg>
+                            {% elif course.icon_type == 'chart' %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                            {% elif course.icon_type == 'robot' %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                                <circle cx="12" cy="5" r="2"></circle>
+                                <path d="M12 7v4"></path>
+                                <line x1="8" y1="16" x2="8.01" y2="16"></line>
+                                <line x1="16" y1="16" x2="16.01" y2="16"></line>
+                            </svg>
+                            {% else %}
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                            {% endif %}
+                        </div>
+
+                        <div class="course-header-text-block">
+                            <h1 class="course-header-title">{{ course.title }}</h1>
+                            <div class="course-header-progress-row">
+                                <div class="course-header-progress-track">
+                                    <div id="courseProgressFill" class="course-header-progress-fill" style="width: {{ progress_stats.percentage }}%;"></div>
+                                </div>
+                                <span id="courseProgressPercentDisplay" class="course-header-progress-pct">{{ progress_stats.percentage }}% Completed</span>
+                            </div>
+                            <span class="course-header-progress-label">Your Progress</span>
+                            <!-- Metadata for course compatibility -->
+                            <div class="course-meta-hidden-compat" style="display: none;" aria-hidden="true">
+                                <span>{{ course.description }}</span>
+                                <span>{{ course.ctc }}</span>
+                                <span>{{ course.companies }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. MAIN LEARNING CONTAINER (20% SIDEBAR | 80% LESSON AREA) -->
+                <div class="learning-experience-layout" id="learningExperienceLayout" data-course-id="{{ course.id }}">
+                    
+                    <!-- Mobile / Tablet Drawer Backdrop Overlay -->
+                    <div class="sidebar-drawer-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+                    <!-- LEFT SIDEBAR (20%) - Course Curriculum -->
+                    <aside class="learning-sidebar glass-panel" id="learningSidebar" aria-label="Course Curriculum">
+                        <div class="sidebar-header-row">
+                            <div class="sidebar-header-title-wrap">
+                                <span class="sidebar-curriculum-tag">Curriculum</span>
+                                <h3 class="sidebar-curriculum-heading">Course Topics</h3>
+                            </div>
+                            <button class="sidebar-close-btn" id="sidebarCloseBtn" type="button" aria-label="Close curriculum sidebar">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="sidebar-topics-scroll">
+                            <div class="sidebar-topics-list" id="sidebarTopicsList" role="list">
+                                {% for topic in topics %}
+                                {% set is_comp = (topic.id|string in completed_topic_ids) or (topic.order|string in completed_topic_ids) %}
+                                {% set is_act = (active_topic and (topic.id == active_topic.id or topic.order == active_topic.order)) %}
+                                <button type="button"
+                                    class="sidebar-topic-item {{ 'active' if is_act else '' }} {{ 'completed' if is_comp else '' }}"
+                                    id="topic-btn-{{ topic.id }}"
+                                    data-topic-id="{{ topic.id }}"
+                                    data-topic-order="{{ topic.order }}"
+                                    data-topic-title="{{ topic.title }}"
+                                    data-video-id="{{ topic.video_id }}"
+                                    data-start-time="{{ topic.start_time or '' }}"
+                                    data-youtube-url="{{ topic.youtube_url }}"
+                                    data-description="{{ topic.description }}"
+                                    data-learning-points='{{ topic.learning_points|tojson }}'
+                                    data-completed="{{ 'true' if is_comp else 'false' }}"
+                                    role="listitem">
+                                    <span class="topic-item-left">
+                                        <span class="topic-item-order">{{ topic.order }}.</span>
+                                        <span class="topic-item-name">{{ topic.title }}</span>
+                                    </span>
+                                    <span class="topic-item-status" aria-hidden="true">
+                                        <span class="status-icon-check">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </span>
+                                        <span class="status-icon-neutral"></span>
+                                    </span>
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- RIGHT LESSON AREA (80%) -->
+                    <section class="learning-lesson-area" id="learningLessonArea" aria-label="Lesson player and details">
+                        
+                        <!-- Top Controls: Sidebar Toggle & Lesson Header -->
+                        <div class="lesson-top-bar glass-panel">
+                            <div class="lesson-top-left">
+                                <button class="sidebar-toggle-action-btn" id="sidebarToggleBtn" type="button" aria-label="Toggle curriculum sidebar" title="Toggle Curriculum Sidebar">
+                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                    </svg>
+                                    <span class="sidebar-toggle-text">Curriculum</span>
+                                </button>
+                                <h2 class="active-lesson-heading" id="activeLessonHeading">
+                                    {{ active_topic.order }}. {{ active_topic.title }}
+                                </h2>
+                            </div>
+
+                            <div class="lesson-top-right completion-control-container">
+                                {% set active_is_completed = (active_topic and ((active_topic.id|string in completed_topic_ids) or (active_topic.order|string in completed_topic_ids))) %}
+                                <div class="completion-action-group {{ 'is-completed is-locked' if active_is_completed else 'is-incomplete' }}" id="completionActionGroup">
+                                    <!-- Main Action Button (Mark as Completed / ✓ Completed / Clear Completion) -->
+                                    <button class="mark-completed-btn {{ 'completed locked' if active_is_completed else '' }}"
+                                        id="markCompletedBtn"
+                                        type="button"
+                                        data-topic-id="{{ active_topic.id if active_topic else '' }}"
+                                        data-state="{{ 'locked' if active_is_completed else 'incomplete' }}"
+                                        aria-label="{{ 'Lesson completed (locked)' if active_is_completed else 'Mark lesson as completed' }}">
+                                        <span class="btn-check-icon" id="markCompletedCheckIcon" aria-hidden="true" style="{{ 'display: inline-flex;' if active_is_completed else 'display: none;' }}">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </span>
+                                        <span class="btn-text-content" id="markCompletedBtnText">
+                                            {{ '✓ Completed' if active_is_completed else 'Mark as Completed' }}
+                                        </span>
+                                    </button>
+
+                                    <!-- Lock / Unlock Toggle Button -->
+                                    <button class="completion-lock-btn {{ 'visible' if active_is_completed else '' }}"
+                                        id="completionLockBtn"
+                                        type="button"
+                                        aria-label="Unlock completion"
+                                        title="Click to unlock completion"
+                                        style="{{ 'display: inline-flex;' if active_is_completed else 'display: none;' }}">
+                                        <span class="lock-icon lock-locked" id="lockIconLocked" aria-hidden="true" style="display: inline-flex;">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                            </svg>
+                                        </span>
+                                        <span class="lock-icon lock-unlocked" id="lockIconUnlocked" aria-hidden="true" style="display: none;">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                                            </svg>
+                                        </span>
+                                    </button>
+
+                                    <!-- Non-intrusive Locked Popover Tooltip -->
+                                    <div class="completion-tooltip-popover completion-lock-tooltip" id="completionTooltipPopover" role="status" aria-live="polite" style="display: none;">
+                                        <span class="tooltip-arrow"></span>
+                                        <span class="tooltip-message" id="completionTooltipText">To clear completion, click the lock icon.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Unlocked State Notice -->
+                                <div class="completion-unlocked-note" id="completionUnlockedNote" role="status" aria-live="polite" style="display: none;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    <span>Completion unlocked. You can clear this lesson now.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RESPONSIVE YOUTUBE PLAYER CONTAINER -->
+                        <div class="lesson-video-player-container glass-panel">
+                            <div class="video-responsive-ratio">
+                                <iframe
+                                    id="youtubePlayerIframe"
+                                    src="https://www.youtube.com/embed/{{ active_topic.video_id if active_topic else '' }}?enablejsapi=1&rel=0{% if active_topic and active_topic.start_time %}&start={{ active_topic.start_time }}{% endif %}"
+                                    title="{{ active_topic.title if active_topic else 'Course Lesson' }}"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowfullscreen
+                                    loading="lazy">
+                                </iframe>
+                            </div>
+
+                            <!-- Embedded Player Fallback for Blocked / Restricted Embedding -->
+                            <div class="video-embed-fallback-banner" id="videoFallbackBanner" style="display: none;">
+                                <div class="fallback-banner-content">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fallback-icon">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    <div class="fallback-text">
+                                        <strong>Unable to play this video inside SkillBridge.AI.</strong>
+                                        <span>Playback is restricted by the content provider for external embeds.</span>
+                                    </div>
+                                </div>
+                                <a id="fallbackWatchBtn" href="{{ active_topic.youtube_url if active_topic else '#' }}" target="_blank" rel="noopener noreferrer" class="primary-button highlight-glass fallback-cta-btn">
+                                    <span>Watch on YouTube &rarr;</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- LESSON CONTENT: ABOUT & WHAT YOU'LL LEARN -->
+                        <div class="lesson-info-panel glass-panel">
+                            <div class="lesson-info-section">
+                                <h3 class="lesson-section-title">About this lesson</h3>
+                                <p class="lesson-section-description" id="lessonDescription">
+                                    {{ active_topic.description if active_topic else 'Select a lesson to begin learning.' }}
+                                </p>
+                            </div>
+
+                            <div class="lesson-info-section" style="margin-top: 24px;">
+                                <h3 class="lesson-section-title">What you'll learn</h3>
+                                <ul class="lesson-learning-points-list" id="lessonPointsList">
+                                    {% if active_topic and active_topic.learning_points %}
+                                    {% for pt in active_topic.learning_points %}
+                                    <li>
+                                        <span class="point-bullet" aria-hidden="true">&bull;</span>
+                                        <span>{{ pt }}</span>
+                                    </li>
+                                    {% endfor %}
+                                    {% endif %}
+                                </ul>
+                            </div>
+
+                            <!-- RESOURCES & DIRECT YOUTUBE LINK (Matching Reference Design) -->
+                            <div class="lesson-resources-section" style="margin-top: 28px;">
+                                <h3 class="lesson-section-title">Resources</h3>
+                                <div class="resource-card glass-card">
+                                    <div class="resource-card-left">
+                                        <div class="resource-icon-circle" aria-hidden="true">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                            </svg>
+                                        </div>
+                                        <div class="resource-meta">
+                                            <strong class="resource-title" id="resourceTopicTitle">
+                                                {{ active_topic.title if active_topic else '' }} - Complete Guide
+                                            </strong>
+                                            <span class="resource-source">freeCodeCamp / SkillBridge.AI Curated Video</span>
+                                        </div>
+                                    </div>
+                                    <div class="resource-card-right">
+                                        <a id="directYoutubeLink"
+                                            href="{{ active_topic.youtube_url if active_topic else '#' }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="watch-youtube-btn"
+                                            aria-label="Watch video directly on YouTube in new tab">
+                                            <span>Watch on YouTube</span>
+                                            <span aria-hidden="true" style="font-size: 15px;">&#8599;</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+                </div>
+
+                <!-- 4. CANONICAL CONTACT US SECTION -->
+                <div style="margin-top: 36px;">
+                    {% include 'partials/contact_section.html' %}
+                </div>
+
+            </div>
+        </main>
+
+        <!-- 5. FLOATING GLASS BOTTOM NAVIGATION (5 Items, Courses Active) -->
+        <nav class="bottom-nav-bar" aria-label="Secondary bottom navigation">
+            <div class="bottom-nav-inner glass-panel">
+                <a href="/jobs-home" class="bottom-nav-tab" aria-label="Jobs" title="Jobs">
+                    <span class="bottom-tab-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                    </span>
+                    <span class="bottom-tab-label">Jobs</span>
+                </a>
+
+                <a href="/upload-resume" class="bottom-nav-tab" aria-label="Resume" title="Resume">
+                    <span class="bottom-tab-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </span>
+                    <span class="bottom-tab-label">Resume</span>
+                </a>
+
+                <a href="/courses" class="bottom-nav-tab active" aria-current="page" aria-label="Courses" title="Courses">
+                    <span class="bottom-tab-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                        </svg>
+                    </span>
+                    <span class="bottom-tab-label">Courses</span>
+                </a>
+
+                <a href="/profile" class="bottom-nav-tab" aria-label="Profile" title="Profile">
+                    <span class="bottom-tab-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                    <span class="bottom-tab-label">Profile</span>
+                </a>
+
+                <a href="/logout" class="bottom-nav-tab bottom-nav-logout-tab" data-logout-trigger="true" aria-label="Logout" title="Logout">
+                    <span class="bottom-tab-icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </span>
+                    <span class="bottom-tab-label">Logout</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    {% include 'partials/logout_modal.html' %}
+
+    <!-- COURSE DETAIL INTERACTIVE SCRIPT -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const courseContainer = document.getElementById("learningExperienceLayout");
+            if (!courseContainer) return;
+
+            const courseId = courseContainer.getAttribute("data-course-id");
+            let currentTopicId = "{{ active_topic.id if active_topic else '1' }}";
+            let isUnlockedState = false;
+            let tooltipTimeout = null;
+
+            const sidebar = document.getElementById("learningSidebar");
+            const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
+            const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+            const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+
+            const topicButtons = document.querySelectorAll(".sidebar-topic-item");
+            const activeLessonHeading = document.getElementById("activeLessonHeading");
+            const markCompletedBtn = document.getElementById("markCompletedBtn");
+            const markCompletedBtnText = document.getElementById("markCompletedBtnText");
+            const markCompletedCheckIcon = document.getElementById("markCompletedCheckIcon");
+            const completionLockBtn = document.getElementById("completionLockBtn");
+            const lockIconLocked = document.getElementById("lockIconLocked");
+            const lockIconUnlocked = document.getElementById("lockIconUnlocked");
+            const completionActionGroup = document.getElementById("completionActionGroup");
+            const completionTooltipPopover = document.getElementById("completionTooltipPopover");
+            const completionUnlockedNote = document.getElementById("completionUnlockedNote");
+
+            const youtubePlayerIframe = document.getElementById("youtubePlayerIframe");
+            const lessonDescription = document.getElementById("lessonDescription");
+            const lessonPointsList = document.getElementById("lessonPointsList");
+            const resourceTopicTitle = document.getElementById("resourceTopicTitle");
+            const directYoutubeLink = document.getElementById("directYoutubeLink");
+            const fallbackWatchBtn = document.getElementById("fallbackWatchBtn");
+            const courseProgressFill = document.getElementById("courseProgressFill");
+            const courseProgressPercentDisplay = document.getElementById("courseProgressPercentDisplay");
+
+            // 1. Sidebar Toggle (Desktop 20/80 to 0/100, Mobile Drawer)
+            const savedSidebarState = localStorage.getItem("sb_sidebar_collapsed");
+            if (savedSidebarState === "true" && window.innerWidth > 992) {
+                courseContainer.classList.add("sidebar-collapsed");
+            }
+
+            function toggleSidebar() {
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.toggle("mobile-drawer-open");
+                    sidebarBackdrop.classList.toggle("active");
+                } else {
+                    courseContainer.classList.toggle("sidebar-collapsed");
+                    localStorage.setItem("sb_sidebar_collapsed", courseContainer.classList.contains("sidebar-collapsed"));
+                }
+            }
+
+            function closeMobileDrawer() {
+                sidebar.classList.remove("mobile-drawer-open");
+                sidebarBackdrop.classList.remove("active");
+            }
+
+            if (sidebarToggleBtn) sidebarToggleBtn.addEventListener("click", toggleSidebar);
+            if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeMobileDrawer);
+            if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", closeMobileDrawer);
+
+            // 2. State Machine Rendering Helper
+            function renderCompletionState(completed, unlocked) {
+                hideTooltip();
+                if (!markCompletedBtn) return;
+
+                markCompletedBtn.setAttribute("data-topic-id", currentTopicId);
+
+                if (!completed) {
+                    // STATE 1: Incomplete + Unlocked
+                    isUnlockedState = false;
+                    markCompletedBtn.className = "mark-completed-btn";
+                    markCompletedBtn.setAttribute("data-state", "incomplete");
+                    markCompletedBtn.setAttribute("aria-label", "Mark lesson as completed");
+                    if (markCompletedBtnText) markCompletedBtnText.textContent = "Mark as Completed";
+                    if (markCompletedCheckIcon) markCompletedCheckIcon.style.display = "none";
+                    if (completionLockBtn) {
+                        completionLockBtn.style.display = "none";
+                        completionLockBtn.classList.remove("visible", "unlocked");
+                    }
+                    if (completionUnlockedNote) completionUnlockedNote.style.display = "none";
+                    if (completionActionGroup) completionActionGroup.className = "completion-action-group is-incomplete";
+                } else if (!unlocked) {
+                    // STATE 2: Completed + Locked
+                    isUnlockedState = false;
+                    markCompletedBtn.className = "mark-completed-btn completed locked";
+                    markCompletedBtn.setAttribute("data-state", "locked");
+                    markCompletedBtn.setAttribute("aria-label", "Lesson completed (locked)");
+                    if (markCompletedBtnText) markCompletedBtnText.textContent = "✓ Completed";
+                    if (markCompletedCheckIcon) markCompletedCheckIcon.style.display = "none";
+                    if (completionLockBtn) {
+                        completionLockBtn.style.display = "inline-flex";
+                        completionLockBtn.classList.add("visible");
+                        completionLockBtn.classList.remove("unlocked");
+                        completionLockBtn.setAttribute("aria-label", "Unlock completion");
+                        completionLockBtn.setAttribute("title", "Click to unlock completion");
+                    }
+                    if (lockIconLocked) lockIconLocked.style.display = "inline-flex";
+                    if (lockIconUnlocked) lockIconUnlocked.style.display = "none";
+                    if (completionUnlockedNote) completionUnlockedNote.style.display = "none";
+                    if (completionActionGroup) completionActionGroup.className = "completion-action-group is-completed is-locked";
+                } else {
+                    // STATE 3: Completed + Unlocked
+                    isUnlockedState = true;
+                    markCompletedBtn.className = "mark-completed-btn completed unlocked-clear-ready";
+                    markCompletedBtn.setAttribute("data-state", "unlocked");
+                    markCompletedBtn.setAttribute("aria-label", "Clear lesson completion");
+                    if (markCompletedBtnText) markCompletedBtnText.textContent = "Clear Completion";
+                    if (markCompletedCheckIcon) markCompletedCheckIcon.style.display = "none";
+                    if (completionLockBtn) {
+                        completionLockBtn.style.display = "inline-flex";
+                        completionLockBtn.classList.add("visible", "unlocked");
+                        completionLockBtn.setAttribute("aria-label", "Lock completion");
+                        completionLockBtn.setAttribute("title", "Lock completion");
+                    }
+                    if (lockIconLocked) lockIconLocked.style.display = "none";
+                    if (lockIconUnlocked) lockIconUnlocked.style.display = "inline-flex";
+                    if (completionUnlockedNote) completionUnlockedNote.style.display = "flex";
+                    if (completionActionGroup) completionActionGroup.className = "completion-action-group is-completed is-unlocked";
+                }
+            }
+
+            function showTooltip(message) {
+                if (!completionTooltipPopover) return;
+                const msgEl = document.getElementById("completionTooltipText");
+                if (msgEl && message) msgEl.textContent = message;
+                completionTooltipPopover.style.display = "block";
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = setTimeout(hideTooltip, 3500);
+            }
+
+            function hideTooltip() {
+                if (completionTooltipPopover) completionTooltipPopover.style.display = "none";
+                clearTimeout(tooltipTimeout);
+            }
+
+            // 3. Topic Switching
+            topicButtons.forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const tid = this.getAttribute("data-topic-id");
+                    const tOrder = this.getAttribute("data-topic-order");
+                    const tTitle = this.getAttribute("data-topic-title");
+                    const videoId = this.getAttribute("data-video-id");
+                    const startTime = this.getAttribute("data-start-time");
+                    const youtubeUrl = this.getAttribute("data-youtube-url");
+                    const desc = this.getAttribute("data-description");
+                    let points = [];
+                    try {
+                        points = JSON.parse(this.getAttribute("data-learning-points") || "[]");
+                    } catch (e) {
+                        points = [];
+                    }
+                    const isCompleted = this.getAttribute("data-completed") === "true";
+
+                    currentTopicId = tid;
+
+                    // Update active state in sidebar
+                    topicButtons.forEach(b => b.classList.remove("active"));
+                    this.classList.add("active");
+
+                    // Update lesson heading
+                    if (activeLessonHeading) {
+                        activeLessonHeading.textContent = `${tOrder}. ${tTitle}`;
+                    }
+
+                    // Update YouTube Player
+                    if (youtubePlayerIframe && videoId) {
+                        let embedSrc = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&rel=0`;
+                        if (startTime) {
+                            embedSrc += `&start=${startTime}`;
+                        }
+                        youtubePlayerIframe.src = embedSrc;
+                        youtubePlayerIframe.title = tTitle;
+                    }
+
+                    // Update Completion State Machine (defaults to locked if completed)
+                    renderCompletionState(isCompleted, false);
+
+                    // Update About Description
+                    if (lessonDescription) {
+                        lessonDescription.textContent = desc || "Comprehensive guide covering foundational principles and real-world engineering patterns.";
+                    }
+
+                    // Update Learning Points
+                    if (lessonPointsList) {
+                        lessonPointsList.innerHTML = "";
+                        if (points && points.length > 0) {
+                            points.forEach(pt => {
+                                const li = document.createElement("li");
+                                li.innerHTML = `<span class="point-bullet" aria-hidden="true">&bull;</span><span>${pt}</span>`;
+                                lessonPointsList.appendChild(li);
+                            });
+                        }
+                    }
+
+                    // Update Resource and Direct YouTube Links
+                    if (resourceTopicTitle) resourceTopicTitle.textContent = `${tTitle} - Complete Guide`;
+                    if (directYoutubeLink) directYoutubeLink.href = youtubeUrl || "#";
+                    if (fallbackWatchBtn) fallbackWatchBtn.href = youtubeUrl || "#";
+
+                    // On mobile, close drawer automatically on selection
+                    if (window.innerWidth <= 992) {
+                        closeMobileDrawer();
+                    }
+                });
+            });
+
+            // 4. Mark As Completed / Clear Completion Action
+            if (markCompletedBtn) {
+                markCompletedBtn.addEventListener("click", function () {
+                    const tid = this.getAttribute("data-topic-id") || currentTopicId;
+                    if (!tid || !courseId) return;
+
+                    const currentState = this.getAttribute("data-state") || "incomplete";
+
+                    // IF LOCKED: Block action and show tooltip
+                    if (currentState === "locked") {
+                        showTooltip("To clear completion, click the lock icon.");
+                        if (completionLockBtn) {
+                            completionLockBtn.style.transform = "scale(1.15)";
+                            setTimeout(() => {
+                                if (completionLockBtn) completionLockBtn.style.transform = "";
+                            }, 250);
+                        }
+                        return; // DO NOT SEND ANY BACKEND REQUEST
+                    }
+
+                    // IF UNLOCKED: Perform Clear Completion (completed = false)
+                    if (currentState === "unlocked") {
+                        renderCompletionState(false, false);
+
+                        const currentTopicBtn = document.getElementById(`topic-btn-${tid}`);
+                        if (currentTopicBtn) {
+                            currentTopicBtn.classList.remove("completed");
+                            currentTopicBtn.setAttribute("data-completed", "false");
+                        }
+
+                        fetch(`/api/courses/${encodeURIComponent(courseId)}/topics/${encodeURIComponent(tid)}/complete`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ completed: false })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data.success) {
+                                const pct = data.percentage !== undefined ? data.percentage : 0;
+                                if (courseProgressFill) courseProgressFill.style.width = `${pct}%`;
+                                if (courseProgressPercentDisplay) courseProgressPercentDisplay.textContent = `${pct}% Completed`;
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Failed to clear topic completion:", err);
+                        });
+                        return;
+                    }
+
+                    // IF INCOMPLETE: Perform Complete (completed = true -> auto-locks)
+                    renderCompletionState(true, false);
+
+                    const currentTopicBtn = document.getElementById(`topic-btn-${tid}`);
+                    if (currentTopicBtn) {
+                        currentTopicBtn.classList.add("completed");
+                        currentTopicBtn.setAttribute("data-completed", "true");
+                    }
+
+                    fetch(`/api/courses/${encodeURIComponent(courseId)}/topics/${encodeURIComponent(tid)}/complete`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ completed: true })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            const pct = data.percentage !== undefined ? data.percentage : 0;
+                            if (courseProgressFill) courseProgressFill.style.width = `${pct}%`;
+                            if (courseProgressPercentDisplay) courseProgressPercentDisplay.textContent = `${pct}% Completed`;
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Failed to persist topic completion:", err);
+                    });
+                });
+            }
+
+            // 5. Lock / Unlock Button Action
+            if (completionLockBtn) {
+                completionLockBtn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    const currentState = markCompletedBtn.getAttribute("data-state");
+                    if (currentState === "locked") {
+                        // Enter UNLOCKED state
+                        renderCompletionState(true, true);
+                    } else if (currentState === "unlocked") {
+                        // Re-LOCK state
+                        renderCompletionState(true, false);
+                    }
+                });
+            }
+
+            // Close tooltip on document click outside
+            document.addEventListener("click", function (e) {
+                if (completionTooltipPopover && !e.target.closest(".completion-control-container")) {
+                    hideTooltip();
+                }
+            });
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/skillbridge.js') }}"></script>
+    {% include "partials/ai_chatbot.html" %}
+    <script src="{{ url_for('static', filename='js/ai_chatbot.js') }}"></script>
+</body>
+
+</html>

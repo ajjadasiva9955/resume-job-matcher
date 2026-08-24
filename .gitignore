@@ -1,5 +1,69 @@
-venv/
-__pycache__/
-uploads/
-*.pyc
+# ==============================================================================
+# SkillBridge.AI — Production .gitignore
+# ==============================================================================
+
+# 1. Environment & Secret Configuration (NEVER COMMIT SENSITIVE VALUES)
 .env
+.env.*
+.env.local
+.env.development
+.env.production
+!.env.example
+*.env
+
+# 2. Database & Persistent Runtime Storage
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# 3. User Uploads & Generated User Documents
+uploads/
+*.pdf
+*.docx
+*.doc
+
+# 4. Python Bytecode & Cache Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 5. Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# 6. IDEs, Editors & Developer Tooling
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# 7. Local Testing / Diagnostics / Scratch Files
+scratch/
+*.log
+logs/
+fail.txt
+fail2.txt
+test_out.txt
+navbars_dump.txt
+navbars_dump_utf8.txt
+
+# 8. Operating System Metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
