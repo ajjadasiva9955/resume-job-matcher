@@ -2530,7 +2530,7 @@ def get_saved_jobs(user_id):
         cursor.execute("""
             SELECT * FROM saved_jobs
             WHERE user_id = ?
-            ORDER BY datetime(saved_at) DESC, id DESC
+            ORDER BY saved_at DESC, id DESC
         """, (user_id,))
         rows = cursor.fetchall()
         return [_row_to_job_dict(row) for row in rows]
@@ -2662,7 +2662,7 @@ def get_applied_jobs(user_id):
         cursor.execute("""
             SELECT * FROM applied_jobs
             WHERE user_id = ?
-            ORDER BY datetime(applied_at) DESC, id DESC
+            ORDER BY applied_at DESC, id DESC
         """, (user_id,))
         rows = cursor.fetchall()
         return [_row_to_job_dict(row) for row in rows]

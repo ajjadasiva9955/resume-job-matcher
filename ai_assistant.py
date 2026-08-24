@@ -99,90 +99,113 @@ def get_authenticated_user_profile(user_id: Optional[int]) -> Optional[Dict[str,
     """Returns safe profile metadata for the authenticated user. Passwords and keys omitted."""
     if not user_id:
         return None
-    user = auth_db.get_user_by_id(user_id)
-    if not user:
+    try:
+        user = auth_db.get_user_by_id(user_id)
+        if not user:
+            return None
+        user_dict = dict(user) if hasattr(user, "keys") else user
+        return {
+            "id": user_dict["id"],
+            "username": user_dict["username"],
+            "email": user_dict["email"],
+            "created_at": user_dict.get("created_at"),
+            "last_login_at": user_dict.get("last_login_at"),
+        }
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load user profile: {type(e).__name__}")
         return None
-    user_dict = dict(user) if hasattr(user, "keys") else user
-    return {
-        "id": user_dict["id"],
-        "username": user_dict["username"],
-        "email": user_dict["email"],
-        "created_at": user_dict.get("created_at"),
-        "last_login_at": user_dict.get("last_login_at"),
-    }
 
 
 def get_user_main_resume(user_id: Optional[int]) -> Optional[Dict[str, Any]]:
     """Returns the authenticated user's current Main Profile Resume data."""
     if not user_id:
         return None
-    resume = auth_db.get_user_resume(user_id, current_only=True)
-    if not resume:
+    try:
+        resume = auth_db.get_user_resume(user_id, current_only=True)
+        if not resume:
+            return None
+        resume_dict = dict(resume) if hasattr(resume, "keys") else resume
+        extracted = resume_dict.get("extracted_data") or {}
+        return {
+            "filename": resume_dict.get("original_filename"),
+            "uploaded_at": resume_dict.get("uploaded_at"),
+            "skills": extracted.get("skills", []),
+            "roles": extracted.get("roles", []),
+            "resume_text": extracted.get("resume_text", ""),
+            "experience": extracted.get("experience", []),
+            "projects": extracted.get("projects", []),
+            "education": extracted.get("education", []),
+            "certifications": extracted.get("certifications", []),
+        }
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load main resume: {type(e).__name__}")
         return None
-    resume_dict = dict(resume) if hasattr(resume, "keys") else resume
-    extracted = resume_dict.get("extracted_data") or {}
-    return {
-        "filename": resume_dict.get("original_filename"),
-        "uploaded_at": resume_dict.get("uploaded_at"),
-        "skills": extracted.get("skills", []),
-        "roles": extracted.get("roles", []),
-        "resume_text": extracted.get("resume_text", ""),
-        "experience": extracted.get("experience", []),
-        "projects": extracted.get("projects", []),
-        "education": extracted.get("education", []),
-        "certifications": extracted.get("certifications", []),
-    }
 
 
 def get_user_skills(user_id: Optional[int]) -> List[str]:
     """Returns list of skills extracted from Main Profile Resume."""
-    resume_data = get_user_main_resume(user_id)
-    if resume_data and resume_data.get("skills"):
-        return resume_data["skills"]
-    return []
+    try:
+        resume_data = get_user_main_resume(user_id)
+        if resume_data and resume_data.get("skills"):
+            return resume_data["skills"]
+        return []
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load skills: {type(e).__name__}")
+        return []
 
 
 def get_user_saved_jobs(user_id: Optional[int]) -> List[Dict[str, Any]]:
     """Returns list of saved jobs for current user."""
     if not user_id:
         return []
-    jobs = auth_db.get_saved_jobs(user_id)
-    return [dict(j) if hasattr(j, "keys") else j for j in jobs]
+    try:
+        jobs = auth_db.get_saved_jobs(user_id)
+        return [dict(j) if hasattr(j, "keys") else j for j in jobs]
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load saved jobs: {type(e).__name__}")
+        return []
 
 
 def get_user_applied_jobs(user_id: Optional[int]) -> List[Dict[str, Any]]:
     """Returns list of applied jobs for current user."""
     if not user_id:
         return []
-    jobs = auth_db.get_applied_jobs(user_id)
-    return [dict(j) if hasattr(j, "keys") else j for j in jobs]
+    try:
+        jobs = auth_db.get_applied_jobs(user_id)
+        return [dict(j) if hasattr(j, "keys") else j for j in jobs]
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load applied jobs: {type(e).__name__}")
+        return []
 
 
 def get_job_details(user_id: Optional[int], job_id: str) -> Optional[Dict[str, Any]]:
     """Looks up job from saved jobs, applied jobs, or cached search results."""
     if not job_id:
         return None
-    
-    # Check saved jobs first
-    if user_id:
-        saved = get_user_saved_jobs(user_id)
-        for j in saved:
-            if str(j.get("job_id")) == str(job_id):
-                return j
-        
-        applied = get_user_applied_jobs(user_id)
-        for j in applied:
-            if str(j.get("job_id")) == str(job_id):
-                return j
+    try:
+        # Check saved jobs first
+        if user_id:
+            saved = get_user_saved_jobs(user_id)
+            for j in saved:
+                if str(j.get("job_id")) == str(job_id):
+                    return j
+            
+            applied = get_user_applied_jobs(user_id)
+            for j in applied:
+                if str(j.get("job_id")) == str(job_id):
+                    return j
 
-        # Check current search results
-        curr_search = auth_db.get_current_job_search(user_id)
-        if curr_search and curr_search.get("jobs"):
-            for j in curr_search["jobs"]:
-                j_dict = dict(j) if hasattr(j, "keys") else j
-                if str(j_dict.get("job_id")) == str(job_id):
-                    return j_dict
-    return None
+            # Check current search results
+            curr_search = auth_db.get_current_job_search(user_id)
+            if curr_search and curr_search.get("jobs"):
+                for j in curr_search["jobs"]:
+                    j_dict = dict(j) if hasattr(j, "keys") else j
+                    if str(j_dict.get("job_id")) == str(job_id):
+                        return j_dict
+        return None
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load job details: {type(e).__name__}")
+        return None
 
 
 def get_job_ats_score_for_user(user_id: Optional[int], job_id: Optional[str] = None, job_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -197,41 +220,54 @@ def get_job_ats_score_for_user(user_id: Optional[int], job_id: Optional[str] = N
             "message": "Please log in and upload your Main Profile Resume to check your ATS match.",
         }
 
-    raw_resume = auth_db.get_user_resume(user_id, current_only=True)
-    if not raw_resume:
+    try:
+        raw_resume = auth_db.get_user_resume(user_id, current_only=True)
+        if not raw_resume:
+            return {
+                "final_score": 0,
+                "status": "RESUME_REQUIRED",
+                "message": "No Main Profile Resume found. Please upload your resume in the Profile section.",
+            }
+
+        target_job = job_data or (get_job_details(user_id, job_id) if job_id else None)
+        if not target_job:
+            # Check if user has saved jobs to evaluate top match
+            saved = get_user_saved_jobs(user_id)
+            if saved:
+                target_job = saved[0]
+
+        if not target_job:
+            return {
+                "final_score": 0,
+                "status": "JOB_REQUIRED",
+                "message": "No job selected. Please provide a job ID or search for jobs first.",
+            }
+
+        # Calculate ATS score via authoritative job_matcher engine
+        score_result = calculate_job_ats_score(raw_resume, target_job)
+        return {
+            "job_title": target_job.get("job_title") or target_job.get("title", "Job"),
+            "company": target_job.get("company", "Company"),
+            "final_score": score_result.get("final_score", 0),
+            "status": score_result.get("status", "COMPLETED"),
+            "matching_skills": score_result.get("matching_skills", []),
+            "missing_required_skills": score_result.get("missing_required_skills", []),
+            "missing_preferred_skills": score_result.get("missing_preferred_skills", []),
+            "deductions": score_result.get("deductions", []),
+            "recommendations": score_result.get("recommendations", []),
+        }
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load ATS analysis: {type(e).__name__}")
         return {
             "final_score": 0,
-            "status": "RESUME_REQUIRED",
-            "message": "No Main Profile Resume found. Please upload your resume in the Profile section.",
+            "status": "ERROR",
+            "message": "ATS calculation temporarily unavailable.",
+            "matching_skills": [],
+            "missing_required_skills": [],
+            "missing_preferred_skills": [],
+            "deductions": [],
+            "recommendations": [],
         }
-
-    target_job = job_data or (get_job_details(user_id, job_id) if job_id else None)
-    if not target_job:
-        # Check if user has saved jobs to evaluate top match
-        saved = get_user_saved_jobs(user_id)
-        if saved:
-            target_job = saved[0]
-
-    if not target_job:
-        return {
-            "final_score": 0,
-            "status": "JOB_REQUIRED",
-            "message": "No job selected. Please provide a job ID or search for jobs first.",
-        }
-
-    # Calculate ATS score via authoritative job_matcher engine
-    score_result = calculate_job_ats_score(raw_resume, target_job)
-    return {
-        "job_title": target_job.get("job_title") or target_job.get("title", "Job"),
-        "company": target_job.get("company", "Company"),
-        "final_score": score_result.get("final_score", 0),
-        "status": score_result.get("status", "COMPLETED"),
-        "matching_skills": score_result.get("matching_skills", []),
-        "missing_required_skills": score_result.get("missing_required_skills", []),
-        "missing_preferred_skills": score_result.get("missing_preferred_skills", []),
-        "deductions": score_result.get("deductions", []),
-        "recommendations": score_result.get("recommendations", []),
-    }
 
 
 def get_user_course_progress_data(user_id: Optional[int], course_id: Optional[str] = None) -> Any:
@@ -239,51 +275,63 @@ def get_user_course_progress_data(user_id: Optional[int], course_id: Optional[st
     if not user_id:
         return {"completed_count": 0, "total_topics": 0, "percentage": 0, "completed_ids": []}
     
-    if course_id:
-        course = get_course_by_id(course_id)
-        topics = course.get("topics", []) if course else []
-        stats = auth_db.get_course_progress_stats(user_id, course_id, total_topics=len(topics))
-        completed_ids = auth_db.get_user_completed_topic_ids(user_id, course_id)
-        return {
-            "course_id": course_id,
-            "course_title": course.get("title") if course else course_id,
-            "completed_count": stats.get("completed_count", 0),
-            "total_topics": stats.get("total_topics", len(topics)),
-            "percentage": stats.get("percentage", 0),
-            "completed_ids": list(completed_ids),
-        }
-    else:
-        # All courses progress
-        return auth_db.get_all_courses_progress_for_user(user_id)
+    try:
+        if course_id:
+            course = get_course_by_id(course_id)
+            topics = course.get("topics", []) if course else []
+            stats = auth_db.get_course_progress_stats(user_id, course_id, total_topics=len(topics))
+            completed_ids = auth_db.get_user_completed_topic_ids(user_id, course_id)
+            return {
+                "course_id": course_id,
+                "course_title": course.get("title") if course else course_id,
+                "completed_count": stats.get("completed_count", 0),
+                "total_topics": stats.get("total_topics", len(topics)),
+                "percentage": stats.get("percentage", 0),
+                "completed_ids": list(completed_ids),
+            }
+        else:
+            # All courses progress
+            return auth_db.get_all_courses_progress_for_user(user_id)
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load course progress: {type(e).__name__}")
+        return {"completed_count": 0, "total_topics": 0, "percentage": 0, "completed_ids": []} if course_id else {}
 
 
 def get_lesson_details(course_id: str, topic_id: str, user_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
     """Returns canonical lesson data with description, learning points, and YouTube link."""
     if not course_id or not topic_id:
         return None
-    course = get_course_by_id(course_id)
-    if not course:
-        return None
-    topic = get_topic_by_id(course_id, topic_id)
-    if not topic:
-        return None
-    
-    is_completed = False
-    if user_id:
-        completed_ids = auth_db.get_user_completed_topic_ids(user_id, course["id"])
-        is_completed = str(topic.get("id")) in completed_ids or str(topic.get("order")) in completed_ids
+    try:
+        course = get_course_by_id(course_id)
+        if not course:
+            return None
+        topic = get_topic_by_id(course_id, topic_id)
+        if not topic:
+            return None
+        
+        is_completed = False
+        if user_id:
+            try:
+                completed_ids = auth_db.get_user_completed_topic_ids(user_id, course["id"])
+                is_completed = str(topic.get("id")) in completed_ids or str(topic.get("order")) in completed_ids
+            except Exception as e:
+                print(f"[Jarvis Context Warning] Failed to load lesson completion status: {type(e).__name__}")
+                is_completed = False
 
-    return {
-        "course_id": course["id"],
-        "course_title": course["title"],
-        "topic_id": str(topic["id"]),
-        "topic_title": topic["title"],
-        "order": topic.get("order", 1),
-        "youtube_url": topic.get("youtube_url", ""),
-        "description": topic.get("description", ""),
-        "learning_points": topic.get("learning_points", []),
-        "is_completed": is_completed,
-    }
+        return {
+            "course_id": course["id"],
+            "course_title": course["title"],
+            "topic_id": str(topic["id"]),
+            "topic_title": topic["title"],
+            "order": topic.get("order", 1),
+            "youtube_url": topic.get("youtube_url", ""),
+            "description": topic.get("description", ""),
+            "learning_points": topic.get("learning_points", []),
+            "is_completed": is_completed,
+        }
+    except Exception as e:
+        print(f"[Jarvis Context Warning] Failed to load lesson details: {type(e).__name__}")
+        return None
 
 
 # =====================================================================
@@ -699,14 +747,20 @@ def process_chat_message(
 ) -> Dict[str, Any]:
     """
     Main entry point for processing Jarvis chatbot messages.
-    Ensures user isolation, controlled tool retrieval, and secure dispatching.
+    Ensures user isolation, controlled tool retrieval, fault isolation, and secure dispatching.
     """
     page_ctx = page_context or {}
     message_clean = (message or "").strip()
     
     # 1. Determine Authentication Mode & User Identity (Server-side only)
     is_authenticated = bool(user_id)
-    user_record = get_authenticated_user_profile(user_id) if is_authenticated else None
+    user_record = None
+    if is_authenticated:
+        try:
+            user_record = get_authenticated_user_profile(user_id)
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load user profile: {type(e).__name__}")
+            user_record = None
     
     if is_authenticated and user_record:
         user_name = user_record.get("username", "Friend")
@@ -718,7 +772,7 @@ def process_chat_message(
     # Context items used for observability
     context_used = []
 
-    # 2. Build Controlled Context (derive only authorized data)
+    # 2. Build Controlled Context (derive only authorized data with strict fault isolation)
     controlled_context: Dict[str, Any] = {
         "page": page_ctx.get("page", "home"),
         "mode": mode,
@@ -728,76 +782,140 @@ def process_chat_message(
     course_id = page_ctx.get("course_id")
     topic_id = page_ctx.get("topic_id")
     if course_id and topic_id:
-        lesson = get_lesson_details(course_id, topic_id, user_id=user_id)
-        if lesson:
-            controlled_context["current_topic"] = lesson
-            context_used.append("current_lesson")
+        try:
+            lesson = get_lesson_details(course_id, topic_id, user_id=user_id)
+            if lesson:
+                controlled_context["current_topic"] = lesson
+                context_used.append("current_lesson")
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load lesson context: {type(e).__name__}")
 
-    # Safe Authenticated Context
+    # Safe Authenticated Context (each item isolated in its own try/except)
     if is_authenticated and user_id:
-        resume_data = get_user_main_resume(user_id)
-        if resume_data:
-            controlled_context["resume_data"] = resume_data
-            controlled_context["resume_skills"] = resume_data.get("skills", [])
-            context_used.append("main_profile_resume")
+        # Main resume & skills
+        try:
+            resume_data = get_user_main_resume(user_id)
+            if resume_data:
+                controlled_context["resume_data"] = resume_data
+                controlled_context["resume_skills"] = resume_data.get("skills", [])
+                context_used.append("main_profile_resume")
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load resume context: {type(e).__name__}")
 
         # Check for Job ATS context if job_id passed or on jobs page
         job_id = page_ctx.get("job_id")
         if job_id:
-            job_ats = get_job_ats_score_for_user(user_id, job_id=job_id)
-            controlled_context["job_ats_info"] = job_ats
-            context_used.append("job_ats_score")
+            try:
+                job_ats = get_job_ats_score_for_user(user_id, job_id=job_id)
+                controlled_context["job_ats_info"] = job_ats
+                context_used.append("job_ats_score")
+            except Exception as e:
+                print(f"[Jarvis Context Warning] Failed to load ATS score context: {type(e).__name__}")
 
-        saved = get_user_saved_jobs(user_id)
-        controlled_context["saved_jobs"] = saved
-        controlled_context["saved_jobs_count"] = len(saved)
-        if saved:
-            context_used.append("saved_jobs")
+        # Saved jobs
+        try:
+            saved = get_user_saved_jobs(user_id)
+            controlled_context["saved_jobs"] = saved
+            controlled_context["saved_jobs_count"] = len(saved)
+            if saved:
+                context_used.append("saved_jobs")
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load saved_jobs context: {type(e).__name__}")
 
-        applied = get_user_applied_jobs(user_id)
-        controlled_context["applied_jobs"] = applied
-        controlled_context["applied_jobs_count"] = len(applied)
-        if applied:
-            context_used.append("applied_jobs")
+        # Applied jobs
+        try:
+            applied = get_user_applied_jobs(user_id)
+            controlled_context["applied_jobs"] = applied
+            controlled_context["applied_jobs_count"] = len(applied)
+            if applied:
+                context_used.append("applied_jobs")
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load applied_jobs context: {type(e).__name__}")
 
         # Course progress
-        if course_id:
-            prog = get_user_course_progress_data(user_id, course_id=course_id)
-            controlled_context["course_progress"] = prog
-            context_used.append("course_progress")
-        else:
-            prog_all = get_user_course_progress_data(user_id)
-            controlled_context["course_progress"] = prog_all
+        try:
+            if course_id:
+                prog = get_user_course_progress_data(user_id, course_id=course_id)
+                controlled_context["course_progress"] = prog
+                context_used.append("course_progress")
+            else:
+                prog_all = get_user_course_progress_data(user_id)
+                controlled_context["course_progress"] = prog_all
+                if prog_all:
+                    context_used.append("course_progress")
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load course_progress context: {type(e).__name__}")
+
+        # Current Job Search Results
+        try:
+            curr_search = auth_db.get_current_job_search(user_id)
+            if curr_search and curr_search.get("jobs"):
+                controlled_context["current_job_search"] = {
+                    "total_jobs": curr_search.get("total_jobs", 0),
+                    "roles": curr_search.get("roles", []),
+                    "skills": curr_search.get("skills", []),
+                }
+                context_used.append("current_job_search")
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load current_job_search context: {type(e).__name__}")
+
+        # Standalone ATS analysis overview
+        try:
+            ats_analysis = auth_db.get_latest_ats_analysis(user_id)
+            if ats_analysis:
+                controlled_context["ats_analysis"] = {
+                    "final_score": ats_analysis.get("final_score", 0),
+                    "primary_domain": ats_analysis.get("primary_domain", ""),
+                    "score_status": ats_analysis.get("score_status", ""),
+                }
+                context_used.append("ats_analysis")
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load latest_ats_analysis context: {type(e).__name__}")
 
     # 3. Provider Selection (Gemini if key available, else Deterministic Fallback)
     gemini_key = None
     if is_authenticated and user_id:
-        user_keys = auth_db.get_user_api_keys(user_id, decrypted=True)
-        gemini_key = user_keys.get("gemini_api_key")
+        try:
+            user_keys = auth_db.get_user_api_keys(user_id, decrypted=True)
+            gemini_key = user_keys.get("gemini_api_key")
+        except Exception as e:
+            print(f"[Jarvis Context Warning] Failed to load user_api_keys context: {type(e).__name__}")
+            gemini_key = None
+
     if not gemini_key:
         gemini_key = os.environ.get("GEMINI_API_KEY")
 
     # If the gemini key looks fake/test-dummy (e.g. gemini_key_a...), fallback to deterministic
     is_real_key = gemini_key and len(gemini_key) > 20 and not gemini_key.startswith("gemini_key_")
 
+    reply = None
     if is_real_key:
-        provider = GeminiAIProvider(gemini_key)
-        reply = provider.generate_reply(
-            user_name=user_name,
-            message=message_clean,
-            context=controlled_context,
-            is_authenticated=is_authenticated,
-            history=history,
-            attachment_text=attachment_text,
-        )
-    else:
-        fallback = DeterministicKnowledgeProvider()
-        reply = fallback.generate_reply(
-            user_name=user_name,
-            message=message_clean,
-            context=controlled_context,
-            is_authenticated=is_authenticated,
-        )
+        try:
+            provider = GeminiAIProvider(gemini_key)
+            reply = provider.generate_reply(
+                user_name=user_name,
+                message=message_clean,
+                context=controlled_context,
+                is_authenticated=is_authenticated,
+                history=history,
+                attachment_text=attachment_text,
+            )
+        except Exception as e:
+            print(f"[Jarvis AI Chatbot Warning] Gemini generation failed ({type(e).__name__}), falling back to deterministic.")
+            reply = None
+
+    if reply is None:
+        try:
+            fallback = DeterministicKnowledgeProvider()
+            reply = fallback.generate_reply(
+                user_name=user_name,
+                message=message_clean,
+                context=controlled_context,
+                is_authenticated=is_authenticated,
+            )
+        except Exception as e:
+            print(f"[Jarvis AI Chatbot Error] Deterministic fallback failed: {type(e).__name__}")
+            reply = "I'm JARVIS, your SkillBridge.AI Career Assistant. How can I help you optimize your resume, match top jobs, or master your career courses today?"
 
     # 4. Return structured response contract
     return {
